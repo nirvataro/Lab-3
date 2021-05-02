@@ -6,7 +6,7 @@ from Backtracking import backtracking
 
 def CSP_coloring(graph):
     while True:
-        graph = backtracking(graph, 'mrv')
+        graph = forward_checking(graph)
         print(graph)
         for node in graph.nodes:
             for neigh in node.neighbors:

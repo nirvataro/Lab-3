@@ -14,6 +14,9 @@ class Node:
         if v2 not in self.neighbors:
             self.neighbors.append(v2)
 
+    def __str__(self):
+        return "Node Number: " + str(self.number) + "\nNode Color: " + str(self.color)
+
 
 class Graph:
     def __init__(self, V, E, k):
@@ -33,11 +36,13 @@ class Graph:
         self.colors = [0 for _ in range(k)]
         # uses to keep track of conflicts entry time to conflict set
         self.conflict_counter = 1
+        self.edges = []
 
     # adds an edge (v1, v2)
     def add_edge(self, v1, v2):
         self.nodes[v1].add_edge(v2)
         self.nodes[v2].add_edge(v1)
+        self.edges.append((v1, v2))
 
     # colors "node" in "color", updates uncolored_nodes, colored_nodes, neighbors possible colors & conflict set
     def color_node(self, node, color):
