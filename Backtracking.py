@@ -11,10 +11,13 @@ def backjumping(G, node):
     for i, conf in enumerate(G.nodes[node].conflict_set):
         if conf and i != bad_node:
             G.nodes[bad_node].conflict_set[i] = conf
-    #G.nodes[node].conflict_set = [0 for _ in G.nodes[node].conflict_set]
+    # G.nodes[node].conflict_set = [0 for _ in G.nodes[node].conflict_set]
     change_node = np.argmax(G.nodes[bad_node].conflict_set)
     if change_node == 0:
-        print('0')
+        new_node_color = G.nodes[bad_node].possible_colors.index(0)
+        G.uncolor_node(bad_node)
+        G.color_node(bad_node, new_node_color)
+        return
     G.uncolor_node(bad_node)
     while 0 not in G.nodes[change_node].possible_colors:
         G.uncolor_node(change_node)

@@ -8,15 +8,13 @@ def CSP_coloring(graph):
     while True:
         graph = backtracking(graph, 'mrv')
         print(graph)
-        if graph.global_best_k == 18:
-            for node in graph.nodes:
-                for neigh in node.neighbors:
-                    if node.color == graph.nodes[neigh].color:
-                        print(node.number, neigh, node.color, graph.nodes[neigh].color)
+        for node in graph.nodes:
+            for neigh in node.neighbors:
+                if node.color == graph.nodes[neigh].color:
+                    print(node.number, neigh, node.color, graph.nodes[neigh].color)
 
         if not graph.uncolored_nodes:
             graph.find_better()
-    return
 
 
 def config_data(input_file):
