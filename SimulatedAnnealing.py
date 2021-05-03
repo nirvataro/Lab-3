@@ -7,10 +7,6 @@ from psutil import cpu_freq
 
 class SimulatedAnnealing:
     def __init__(self, capacity, dist_matrix, goods, search_time=120, output=False):
-        self.cities = list(range(1, len(goods)))
-        self.city_dist_matrix = dist_matrix
-        self.goods = goods
-        self.truck_capacity = capacity
         self.saBest = VRP(capacity, dist_matrix, goods)
         self.sa_search(search_time, output)
 
