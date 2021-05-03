@@ -1,6 +1,3 @@
-import numpy as np
-
-
 class Node:
     def __init__(self, number, k, V):
         self.neighbors = []
@@ -81,6 +78,18 @@ class Graph:
                 if self.nodes[v].possible_colors[old_color] == 0:
                     self.nodes[v].domain.append(old_color)
 
+    def initial_solution(self):
+        for node in self.nodes:
+            if not node.number:
+                continue
+            neighbors = [self.nodes[neighbor] for neighbor in node.neighbors]
+            neighbors_colors = [neighbor.color for neighbor in neighbors]
+            for color in range(len(self.colors)):
+                if color not in neighbors_colors:
+                    self.color_node(node.number, color)
+                    continue
+        return self.best_k
+
     # returns a color for "node" that will least constrain its neighbor
     def least_constraining(self, node):
         neighbors = self.nodes[node].neighbors
@@ -105,6 +114,16 @@ class Graph:
             node.possible_colors = node.possible_colors[:k - 1]
         self.colors = self.colors[:k-1]
         self.conflict_counter = 1
+
+    def smaller_domain(self):
+        k = self.best_k
+        for node in self.nodes:
+            if node.color == (k-1):
+                self.uncolor_node(node.number)
+            if (k-1) in node.domain:
+                node.domain.remove(k-1)
+            node.possible_colors = node.possible_colors[:k-1]
+        self.colors = self.colors[:k-1]
 
     def __str__(self):
         return "BEST K: " + str(self.global_best_k) + "\nMax K = " + str(len(self.colors))

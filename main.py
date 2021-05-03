@@ -2,9 +2,11 @@ from sys import argv
 from graphClass import Graph
 from ForwardChecking import forward_checking
 from Backtracking import backtracking
+from Objective_local_search import objective_local_search
 
 
 def CSP_coloring(graph):
+    objective_local_search(graph)
     while True:
         colored = forward_checking(graph)
         # colored = backtracking(graph)
