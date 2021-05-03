@@ -9,6 +9,7 @@ class Node:
         # if possible_colors[i] == 0 -> can color node in color i
         self.possible_colors = [0 for _ in range(k)]
         self.conflict_set = [0 for _ in range(V+1)]
+        self.domain = [i for i in range(k)]
 
     def add_edge(self, v2):
         if v2 not in self.neighbors:
@@ -56,6 +57,8 @@ class Graph:
                 self.best_k += 1
             for v in self.nodes[node].neighbors:
                 self.nodes[v].possible_colors[color] += 1
+                if self.nodes[v].possible_colors[color] == 1:
+                    self.nodes[v].domain.remove(color)
                 self.nodes[v].conflict_set[node] = self.conflict_counter
             self.conflict_counter += 1
             if not self.uncolored_nodes:
@@ -75,6 +78,8 @@ class Graph:
             for v in self.nodes[node].neighbors:
                 self.nodes[v].possible_colors[old_color] -= 1
                 self.nodes[v].conflict_set[node] = 0
+                if self.nodes[v].possible_colors[old_color] == 0:
+                    self.nodes[v].domain.append(old_color)
 
     # returns a color for "node" that will least constrain its neighbor
     def least_constraining(self, node):
@@ -94,11 +99,12 @@ class Graph:
     def find_better(self):
         k = self.best_k
         for node in self.nodes:
-            if node.color == k-1:
-                self.uncolor_node(node.number)
+            self.uncolor_node(node.number)
         for node in self.nodes:
-            node.possible_colors = node.possible_colors[:k-1]
-        self.colors = self.colors[:k - 1]
+            node.domain = [i for i in range(k-1)]
+            node.possible_colors = node.possible_colors[:k - 1]
+        self.colors = self.colors[:k-1]
+        self.conflict_counter = 1
 
     def __str__(self):
         return "BEST K: " + str(self.global_best_k) + "\nMax K = " + str(len(self.colors))

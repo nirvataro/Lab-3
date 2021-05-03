@@ -6,8 +6,12 @@ from Backtracking import backtracking
 
 def CSP_coloring(graph):
     while True:
-        graph = forward_checking(graph)
-        print(graph)
+        colored = forward_checking(graph)
+        # colored = backtracking(graph)
+        if colored:
+            print(graph)
+        else:
+            print("Can't do better")
         for node in graph.nodes:
             for neigh in node.neighbors:
                 if node.color == graph.nodes[neigh].color:
