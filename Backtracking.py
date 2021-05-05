@@ -1,4 +1,3 @@
-from CSPcoloringHeuristics import MRV, LCV
 import numpy as np
 import sys
 sys.setrecursionlimit(10000)
@@ -18,10 +17,18 @@ class BacktrackingWithBackjumping:
 
     # finds minimum remaining values variable with Highest Degree
     def MRVandHD(self):
-        remaining_neighbor_colors = [sum([int(neigh[j]) for j in len(range(neigh))]) for neigh in self.neighbors_constraints]
-        remaining_values = [int(self.my_domains[i]) + remaining_neighbor_colors[i] for i in range(len(self.neighbors_constraints))]
+        # calculates number of colors available for each node
+        remaining_values = [0 for _ in range(self.graph.V)]
+        for i in range(self.graph.V):
+            for j in range(self.graph.k):
+                if self.my_domains[i][j] and not self.neighbors_constraints[i][j]:
+                    remaining_values[i] += 1
+
+        # find the minimum number of values available
         min_remaining_values = min(remaining_values)
-        nodes_min_remaining = [i for i in range(len(remaining_values)) if i == min_remaining_values]
+        # find all nodes with minimum number of values available
+        nodes_min_remaining = [i for i in range(len(remaining_values)) if remaining_values[i] == min_remaining_values]
+        # from nodes with minimum number of values, choose the node with the highest degree
         highest_degree = 0
         for node_number in nodes_min_remaining:
             if len(self.graph.nodes[node_number].neighbors) > highest_degree:
