@@ -11,18 +11,18 @@ class BacktrackingWithBackjumping:
         # all nodes conflict sets
         self.conflict_set = [[0 for _ in range(self.graph.V)] * self.graph.V]
         # domain of colors node tried using
-        self.my_domains = [[True for _ in range(len(self.graph.colors))]*self.graph.V]
+        self.my_domains = [[True for _ in range(self.graph.k)] for _ in range(self.graph.V)]
         # domain of colors neighbors of nodes are colored in
-        self.neighbors_constraints = [[0 for _ in range(len(self.graph.colors))]*self.graph.V]
+        self.neighbors_constraints = [[0 for _ in range(self.graph.k)] for _ in range(self.graph.V)]
 
     # finds minimum remaining values variable with Highest Degree
     def MRVandHD(self):
         # calculates number of colors available for each node
         remaining_values = [0 for _ in range(self.graph.V)]
-        for i in range(self.graph.V):
-            for j in range(self.graph.k):
-                if self.my_domains[i][j] and not self.neighbors_constraints[i][j]:
-                    remaining_values[i] += 1
+        for node in range(self.graph.V):
+            for color in range(self.graph.k):
+                if self.my_domains[node][color] and not self.neighbors_constraints[node][color]:
+                    remaining_values[node] += 1
 
         # find the minimum number of values available
         min_remaining_values = min(remaining_values)

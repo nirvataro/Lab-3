@@ -17,7 +17,6 @@ class Node:
 
     def __deepcopy__(self):
         new = Node(self.number, self.color)
-        new.neighbors = copy.deepcopy(self.neighbors)
         return new
 
 
@@ -34,7 +33,7 @@ class Graph:
             # array of graph nodes
             self.nodes = [Node(i) for i in range(V+1)]
             # array of indices of uncolored nodes
-            self.uncolored_nodes = copy.deepcopy(self.nodes)
+            self.uncolored_nodes = [self.nodes[node.number] for node in self.nodes]
             # array of colors in cell i will be the number of color i was used
             self.times_used_color = [0 for _ in range(k)]
         else:
@@ -95,8 +94,11 @@ class Graph:
     def __deepcopy__(self):
         new = Graph(self.V, self.E, self.k, copy=True)
         new.nodes = [node.__deepcopy__() for node in self.nodes]
-        new.uncolored_nodes = copy.deepcopy(self.uncolored_nodes)
-        new.colored_nodes = copy.deepcopy(self.colored_nodes)
+        for v1 in new.nodes:
+            for v2 in self.nodes[v1.number].neighbors:
+                v1.add_edge(new.nodes[v2.number])
+        new.uncolored_nodes = [new.nodes[node.number] for node in self.uncolored_nodes]
+        new.colored_nodes = [new.nodes[node.number] for node in self.colored_nodes]
         new.colors_used_until_now = self.colors_used_until_now
         new.times_used_color = self.times_used_color.copy()
         return new
@@ -112,20 +114,6 @@ class Graph:
     #                 self.color_node(node.number, color)
     #                 continue
     #     return self.best_k
-
-    # returns a color for "node" that will least constrain its neighbor
-    # def least_constraining(self, node):
-    #     neighbors = self.nodes[node].neighbors
-    #     best_color, constraints, best_constraint = None, 0, 0
-    #     for color, neighbors_with_color in enumerate(self.nodes[node].possible_colors):
-    #         if not neighbors_with_color:
-    #             for neigh in neighbors:
-    #                 if not self.nodes[neigh].possible_colors[color]:
-    #                     constraints += 1
-    #             if best_color is None or constraints < best_constraint:
-    #                 best_color = color
-    #                 best_constraint = constraints
-    #     return best_color
 
     # after finding a solution with k colors, try finding with k-1 colors
     # def find_better(self):

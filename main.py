@@ -8,10 +8,13 @@ from SimulatedAnnealing import SimulatedAnnealing as SA
 sys.setrecursionlimit(10000)
 
 def CSP_coloring(graph):
-    SA(graph, output=True)  # objective_local_search(graph)
+    back_jump = BacktrackingWithBackjumping(graph)
+    if back_jump.backtracking():
+        print(back_jump.graph)
+
     while True:
         colored = forward_checking(graph)
-        # colored = backtracking(graph)
+        colored = backtracking(graph)
         if colored:
             print(graph)
         else:
