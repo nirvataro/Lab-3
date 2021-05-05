@@ -7,10 +7,11 @@ sys.setrecursionlimit(10000)
 class BacktrackingWithBackjumping():
     def __init__(self, graph):
         self.graph = graph.__deepcopy__()
-        self.conflict_set = [[0 for _ in range(self.graph.V)]*self.graph.V]
         # uses to keep track of conflicts entry time to conflict set
         self.conflict_counter = 1
-        self.domains = [[1 for _ in range(len(self.graph.colors))]*self.graph.V]
+        self.conflict_set = [[0 for _ in range(self.graph.V)] * self.graph.V]
+        self.my_domains = [[True for _ in range(len(self.graph.colors))]*self.graph.V]
+        self.neighbors_constraints = [[0 for _ in range(len(self.graph.colors))]*self.graph.V]
 
     def try_to_color(self, node_number):
         node_domain = self.domains[node_number]
@@ -21,51 +22,45 @@ class BacktrackingWithBackjumping():
             if node_domain[i] and i not in node_neighbors_colors:
                 node_domain[i] = 0
                 return i
-        return False
+        return None
 
+    def color_node(self, node, color):
+        self.graph.color_node(node, color)
 
-    def color_node(self, node_number, color):
-        self.graph.color_node(node_number, color)
-
-        for neigh in self.graph.nodes[node_number].neighbors:
-            self.conflict_set[neigh][node_number] = self.conflict_counter
+        for neigh in node.neighbors:
+            self.conflict_set[neigh.number][node.number] = self.conflict_counter
+            self.neighbors_constraints[neigh.number][color] += 1
         self.conflict_counter += 1
 
-    def uncolor_node(self, node_number):
-        self.graph.uncolor_node(node_number)
+    def uncolor_node(self, node, color):
+        self.graph.uncolor_node(node)
 
-        for neigh in self.graph.nodes[node_number].neighbors:
-            self.conflict_set[neigh][node_number] = 0
+        for neighbor in node.neighbors:
+            self.neighbors_constraints[neighbor.number][color] -= 1
 
-    def backjumping(self, node):
-        last_conflict = np.argmax(self.conflict_set[node])
-        for i, conf in enumerate(self.conflict_set[node]):
+    def backjump(self, node_number):
+        # choosing dead end node by conflict set
+        last_conflict = np.argmax(self.conflict_set[node_number])
+
+        # update conflict set of current node and last conflicts nodes
+        for i, conf in enumerate(self.conflict_set[node_number]):
             if conf and i != last_conflict:
                 self.conflict_set[last_conflict][i] = conf
+        self.conflict_set[node_number] = [0 for _ in range(self.graph.V)]
 
-        self.uncolor_node(last_conflict)
+        # initialize current nodes domain
+        self.my_domains[node_number] = [True for _ in range(len(self.graph.colors))]
 
-        # for color in self.graph.nodes[last_conflict].domain:
-        #
-        # hile 0 not in G.nodes[change_node].possible_colors:
-        #     G.uncolor_node(change_node)
-        #     backjumping(G, change_node)
-        # change_node_color = G.nodes[change_node].possible_colors.index(0)
-        # G.uncolor_node(change_node)
-        # G.color_node(change_node, change_node_color)
-        # G.nodes[node].conflict_set = [0 for _ in G.nodes[node].conflict_set]
-        # return G
+        # remove color from dead end node
+        lc_color = self.graph.nodes[last_conflict].color
+        self.uncolor_node(self.graph.nodes[last_conflict], lc_color)
 
-    def backtracking(self, G):
-        if not G.uncolored_nodes:
-            return G
-        nodes_by_MRV = MRV(G)
-        for node in nodes_by_MRV:
-            colors_to_check = node.domain.copy()
-            colors_to_check = LCV(G, node, colors_to_check)
-            if not colors_to_check:
-                self.backjumping(G, node.number)
-            else:
-                G.color_node(node.number, colors_to_check[0])
-        return self.backtracking(G)
+
+    def backtracking(self):
+        while self.graph.uncolored_nodes:
+            next_node_number = self.MRV()
+            color = self.try_to_color(next_node_number)
+            if color is None:
+                self.backjump(next_node_number)
+        return True
 

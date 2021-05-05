@@ -1,6 +1,6 @@
 # minimum remaining values
 def MRV(graph):
-    uncolored = [graph.nodes[i] for i in graph.uncolored_nodes]
+    uncolored = [node for node in graph.uncolored_nodes]
     uncolored.sort(key=lambda x: len(x.domain))
     return HD(uncolored)
 
