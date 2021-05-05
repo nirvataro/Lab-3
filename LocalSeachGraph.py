@@ -5,7 +5,7 @@ class Node:
         self.color = None
         self.neighbors = []
 
-    def copy(self):
+    def __copy__(self):
         copy = Node(self.number)
         copy.color = self.color
         copy.neighbors = self.neighbors.copy()
@@ -51,7 +51,7 @@ class LocalSearchGraph:
 
     def copy(self):
         copy = LocalSearchGraph(self.V, self.k)
-        copy.nodes = [node.copy() for node in self.nodes]
+        copy.nodes = [node.__copy__() for node in self.nodes]
         copy.colors = [i for i in range(self.k)]
         copy.best_k = self.best_k
         return copy

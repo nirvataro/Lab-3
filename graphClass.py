@@ -1,3 +1,6 @@
+import copy
+
+
 class Node:
     def __init__(self, number, k, V):
         self.neighbors = []
@@ -15,9 +18,20 @@ class Node:
     def __str__(self):
         return "Node Number: " + str(self.number) + "\nNode Color: " + str(self.color)
 
+    def __deepcopy__(self):
+        new = Node(self.number, len(self.domain), len(self.conflict_set)-1)
+        new.neighbors = copy.deepcopy(self.neighbors)
+        new.number = self.number
+        new.color = self.color
+        new.possible_colors = copy.deepcopy(self.possible_colors)
+        new.conflict_set = copy.deepcopy(self.conflict_set)
+        new.domain = copy.deepcopy(self.domain)
+        return new
+
 
 class Graph:
     def __init__(self, V, E, k):
+        self.V = V
         # array of graph nodes
         self.nodes = [Node(i, k, V) for i in range(V+1)]
         # graph density
@@ -32,8 +46,6 @@ class Graph:
         self.global_best_k = 0
         # array of colors in cell i will be the number of color i was used
         self.colors = [0 for _ in range(k)]
-        # uses to keep track of conflicts entry time to conflict set
-        self.conflict_counter = 1
         self.edges = []
 
     # adds an edge (v1, v2)
@@ -127,3 +139,16 @@ class Graph:
 
     def __str__(self):
         return "BEST K: " + str(self.global_best_k) + "\nMax K = " + str(len(self.colors))
+
+    def __deepcopy__(self):
+        new = Graph(len(self.nodes)-1, len(self.edges), len(self.colors))
+        new.nodes = [node.__deepcopy__() for node in self.nodes]
+        new.density = self.density
+        new.uncolored_nodes = copy.deepcopy(self.uncolored_nodes)
+        new.colored_nodes = copy.deepcopy(self.colored_nodes)
+        new.best_k = self.best_k
+        new.global_best_k = self.global_best_k
+        new.colors = copy.deepcopy(self.colors)
+        new.conflict_counter = self.conflict_counter
+        new.edges = copy.deepcopy(self.edges)
+        return new

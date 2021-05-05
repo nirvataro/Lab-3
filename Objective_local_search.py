@@ -1,6 +1,10 @@
+
 class ObjectiveFunctionGraph:
     def __init__(self, graph):
         self.graph = graph
+
+    def __str__(self):
+        return "BEST K: " + str(self.graph.global_best_k) + "\nMax K = " + str(len(self.graph.colors))
 
     def objective_function(self):
         val = sum([color**2 for color in self.graph.colors])
@@ -51,8 +55,4 @@ class ObjectiveFunctionGraph:
 
 
 def objective_local_search(graph):
-    ols_graph = ObjectiveFunctionGraph(graph)
-    can_improve = ols_graph.graph.initial_solution()
-    while can_improve:
-        print(ols_graph.graph)
-        can_improve = ols_graph.improve()
+    ols_graph = SA(graph, output=True)
