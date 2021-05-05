@@ -15,14 +15,18 @@ class BacktrackingWithBackjumping:
         # domain of colors neighbors of nodes are colored in
         self.neighbors_constraints = [[0 for _ in range(len(self.graph.colors))]*self.graph.V]
 
-    # finds minimum remaining values variable with Highest Degree
-    def MRVandHD(self):
-        # calculates number of colors available for each node
+    # calculates number of colors available for each node
+    def remaining_values_calculator(self):
         remaining_values = [0 for _ in range(self.graph.V)]
         for i in range(self.graph.V):
             for j in range(self.graph.k):
                 if self.my_domains[i][j] and not self.neighbors_constraints[i][j]:
                     remaining_values[i] += 1
+        return remaining_values
+
+    # finds minimum remaining values variable with Highest Degree
+    def MRVandHD(self):
+        remaining_values = self.remaining_values_calculator()
 
         # find the minimum number of values available
         min_remaining_values = min(remaining_values)
@@ -35,6 +39,21 @@ class BacktrackingWithBackjumping:
                 best_node = self.graph.nodes[node_number]
                 highest_degree = len(self.graph.nodes[node_number].neighbors)
         return best_node
+
+    # finds least constraining color for "node"
+    def LCV(self, node):
+        neighbors = node.neighbors
+        best_color, constraints, best_constraint = None, 0, 0
+        remaining_values = self.remaining_values_calculator()
+        for color, neighbors_with_color in enumerate(self.neighbors_constraints[node.number]):
+            if not neighbors_with_color:
+                for neigh in neighbors:
+                    if not node[neigh].possible_colors[color]:
+                        constraints += 1
+                if best_color is None or constraints < best_constraint:
+                    best_color = color
+                    best_constraint = constraints
+        return best_color
 
     # check for node_number if exists a color, if so color the node
     def try_to_color(self, node_number):
@@ -53,22 +72,28 @@ class BacktrackingWithBackjumping:
         # unable to find color
         return False
 
+    # color "node" with "color"
     def color_node(self, node, color):
+        # use graphs coloring function
         self.graph.color_node(node, color)
 
+        # update conflict sets and neighbor constraints based on coloring
         for neigh in node.neighbors:
             self.conflict_set[neigh.number][node.number] = self.conflict_counter
             self.neighbors_constraints[neigh.number][color] += 1
         self.conflict_counter += 1
 
+    # uncolor "node"
     def uncolor_node(self, node, color):
+        # use graphs uncoloring function
         self.graph.uncolor_node(node)
 
+        # update neighbor constraints
         for neighbor in node.neighbors:
             self.neighbors_constraints[neighbor.number][color] -= 1
 
+    # backjump to position of no dead end
     def backjump(self, node_number):
-
         # choosing dead end node by conflict set
         last_conflict = np.argmax(self.conflict_set[node_number])
         # if node has no conflicts -> no legal coloring exists
@@ -88,6 +113,7 @@ class BacktrackingWithBackjumping:
         lc_color = self.graph.nodes[last_conflict].color
         self.uncolor_node(self.graph.nodes[last_conflict], lc_color)
 
+    # coloring search function
     def backtracking(self):
         while self.graph.uncolored_nodes:
             next_node_number = self.MRVandHD()

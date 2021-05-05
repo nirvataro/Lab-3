@@ -1,9 +1,11 @@
 from sys import argv
+import sys
 from graphClass import Graph
 from ForwardChecking import forward_checking
-from Backtracking import backtracking
+from Backtracking import BacktrackingWithBackjumping
 from Objective_local_search import objective_local_search
 from SimulatedAnnealing import SimulatedAnnealing as SA
+sys.setrecursionlimit(10000)
 
 def CSP_coloring(graph):
     SA(graph, output=True)  # objective_local_search(graph)
