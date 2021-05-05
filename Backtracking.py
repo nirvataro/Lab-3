@@ -10,6 +10,19 @@ class BacktrackingWithBackjumping():
         self.conflict_set = [[0 for _ in range(self.graph.V)]*self.graph.V]
         # uses to keep track of conflicts entry time to conflict set
         self.conflict_counter = 1
+        self.domains = [[1 for _ in range(len(self.graph.colors))]*self.graph.V]
+
+    def try_to_color(self, node_number):
+        node_domain = self.domains[node_number]
+        if not sum(node_domain):
+            return False
+        node_neighbors_colors = [self.graph.nodes[neigh].color for neigh in self.graph.nodes[node_number].neigbors]
+        for i in range(len(node_domain)):
+            if node_domain[i] and i not in node_neighbors_colors:
+                node_domain[i] = 0
+                return i
+        return False
+
 
     def color_node(self, node_number, color):
         self.graph.color_node(node_number, color)
