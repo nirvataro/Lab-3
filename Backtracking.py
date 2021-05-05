@@ -15,18 +15,14 @@ class BacktrackingWithBackjumping:
         # domain of colors neighbors of nodes are colored in
         self.neighbors_constraints = [[0 for _ in range(len(self.graph.colors))]*self.graph.V]
 
-    # calculates number of colors available for each node
-    def remaining_values_calculator(self):
+    # finds minimum remaining values variable with Highest Degree
+    def MRVandHD(self):
+        # calculates number of colors available for each node
         remaining_values = [0 for _ in range(self.graph.V)]
         for i in range(self.graph.V):
             for j in range(self.graph.k):
                 if self.my_domains[i][j] and not self.neighbors_constraints[i][j]:
                     remaining_values[i] += 1
-        return remaining_values
-
-    # finds minimum remaining values variable with Highest Degree
-    def MRVandHD(self):
-        remaining_values = self.remaining_values_calculator()
 
         # find the minimum number of values available
         min_remaining_values = min(remaining_values)
@@ -41,35 +37,39 @@ class BacktrackingWithBackjumping:
         return best_node
 
     # finds least constraining color for "node"
-    def LCV(self, node):
+    def get_colors_by_LCV(self, node):
         neighbors = node.neighbors
+        all_colors = [0 for _ in range(self.graph.k)]
         best_color, constraints, best_constraint = None, 0, 0
-        remaining_values = self.remaining_values_calculator()
-        for color, neighbors_with_color in enumerate(self.neighbors_constraints[node.number]):
-            if not neighbors_with_color:
+        neighbors_colors = self.neighbors_constraints[node.number]
+        tried_colors = self.my_domains[node.number]
+
+        for color in range(len(all_colors)):
+            if (tried_colors[color] is True) and (neighbors_colors[color] == 0):
                 for neigh in neighbors:
-                    if not node[neigh].possible_colors[color]:
-                        constraints += 1
-                if best_color is None or constraints < best_constraint:
-                    best_color = color
-                    best_constraint = constraints
-        return best_color
+                    if self.neighbors_constraints[neigh.number][color] != 0:
+                        all_colors[color] += 1
+            else:
+                all_colors[color] = -1
+
+        return all_colors
 
     # check for node_number if exists a color, if so color the node
     def try_to_color(self, node_number):
         # colors used in past by "node", and colors of "node"s neighbors
+        try_colors = self.get_colors_by_LCV(self.graph.nodes[node_number])
         node_domain = self.my_domains[node_number]
-        node_neighbor_constraint = self.neighbors_constraints[node_number]
 
         # iterating through nodes colors, if node didnt use color in past and neighbors not using color
         # than color is legal
-        for color, untried, in_neighbors in enumerate(zip(node_domain, node_neighbor_constraint)):
-            if untried and in_neighbors:
-                # found legal color
-                self.color_node(self.graph.nodes[node_number], color)
-                node_domain[color] = False
-                return True
-        # unable to find color
+        while not all(x == -1 for x in try_colors):
+            # found legal color
+            color = np.argmax(try_colors)
+            try_colors[color] = -1
+            node_domain[color] = False
+
+            self.color_node(self.graph.nodes[node_number], color)
+            return True
         return False
 
     # color "node" with "color"
