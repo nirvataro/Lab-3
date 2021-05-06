@@ -8,6 +8,7 @@ class BacktrackingWithBackjumping:
         self.graph = graph.__deepcopy__()
         # uses to keep track of conflicts entry time to conflict set
         self.conflict_counter = 1
+        self.coloring_time = [0 for _ in range(self.graph.V+1)]
         # all nodes conflict sets
         self.conflict_set = [[0 for _ in range(self.graph.V+1)] for _ in range(self.graph.V+1)]
         # domain of colors node tried using
@@ -27,6 +28,7 @@ class BacktrackingWithBackjumping:
                     remaining_values[node.number] += 1
 
         # find the minimum number of values available
+        remaining_values[0] = np.inf
         min_remaining_values = np.inf
         for node in self.graph.uncolored_nodes:
             if node.number != 0 and remaining_values[node.number] < min_remaining_values:
@@ -38,7 +40,7 @@ class BacktrackingWithBackjumping:
                 if (remaining_values[i] == min_remaining_values) and (uncolored_node.number == i):
                     nodes_min_remaining.append(i)
         # from nodes with minimum number of values, choose the node with the highest degree
-        highest_degree = 0
+        highest_degree = -1
         for node_number in nodes_min_remaining:
             if len(self.graph.nodes[node_number].neighbors) > highest_degree:
                 best_node = self.graph.nodes[node_number]
@@ -85,11 +87,14 @@ class BacktrackingWithBackjumping:
         # use graphs coloring function
         self.graph.color_node(node, color)
 
+        self.coloring_time[node.number] = self.conflict_counter
+        self.conflict_counter += 1
+
         # update conflict sets and neighbor constraints based on coloring
         for neigh in node.neighbors:
-            self.conflict_set[neigh.number][node.number] = self.conflict_counter
             self.neighbors_constraints[neigh.number][color] += 1
-        self.conflict_counter += 1
+            if neigh.color is not None:
+                self.conflict_set[node.number][neigh.number] = self.coloring_time[neigh.number]
 
     # uncolor "node"
     def uncolor_node(self, node, color):
@@ -112,7 +117,7 @@ class BacktrackingWithBackjumping:
         for i, conf in enumerate(self.conflict_set[node.number]):
             if conf and i != last_conflict:
                 self.conflict_set[last_conflict][i] = conf
-        self.conflict_set[node.number] = [0 for _ in range(self.graph.V)]
+        self.conflict_set[node.number] = [0 for _ in range(self.graph.V+1)]
 
         # initialize current nodes domain
         self.my_domains[node.number] = [True for _ in range(self.graph.k)]

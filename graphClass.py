@@ -1,4 +1,6 @@
-import copy
+import random
+import networkx as nx
+import matplotlib.pyplot as plt
 
 
 class Node:
@@ -51,7 +53,7 @@ class Graph:
     def add_edge(self, v1, v2):
         self.nodes[v1].add_edge(self.nodes[v2])
         self.nodes[v2].add_edge(self.nodes[v1])
-        self.edges.append((str(v1), str(v2)))
+        self.edges.append((v1, v2))
 
     # colors "node" in "color", updates uncolored_nodes and colored_nodes
     def color_node(self, node, color):
@@ -93,8 +95,6 @@ class Graph:
                 output += "  " + str(node.number) + "\t  " + str(node.color) + "\n"
         return output
 
-
-
     # copy graph method
     def __deepcopy__(self):
         new = Graph(self.V, self.E, self.k, copy=True)
@@ -106,8 +106,21 @@ class Graph:
         new.colored_nodes = [new.nodes[node.number] for node in self.colored_nodes]
         new.colors_used_until_now = self.colors_used_until_now
         new.times_used_color = self.times_used_color.copy()
+        new.edges = self.edges.copy()
         return new
 
+    # drawing the graph
+    def draw(self):
+        G = nx.Graph()
+        G.add_nodes_from(list(range(1, self.V + 1)))
+        G.add_edges_from(self.edges)
+        node_color = ["#" + ''.join([random.choice('0123456789ABCDEF') for j in range(6)]) for i in range(self.k)]
+
+        color_map = []
+        for node in self.nodes[1:]:
+            color_map.append(node_color[node.color])
+        nx.draw(G, node_color=color_map, with_labels=True)
+        plt.show()
     # def initial_solution(self):
     #     for node in self.nodes:
     #         if not node.number:
