@@ -13,7 +13,7 @@ class Node:
             self.neighbors.append(v2)
 
     def __str__(self):
-        return "Node Number: " + str(self.number) + "\nNode Color: " + str(self.color)
+        return "Node Number: " + str(self.number) + "\nNode Color: " + str(self.color) +"\n"
 
     def __deepcopy__(self):
         new = Node(self.number, self.color)
@@ -73,7 +73,7 @@ class Graph:
             for i, v in enumerate(self.colored_nodes):
                 if v.number == node.number:
                     v_copy = v
-                    del self.uncolored_nodes[i]
+                    del self.colored_nodes[i]
                     break
             self.uncolored_nodes.append(v_copy)
             old_color = node.color

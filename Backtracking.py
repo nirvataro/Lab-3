@@ -27,10 +27,14 @@ class BacktrackingWithBackjumping:
         # find the minimum number of values available
         min_remaining_values = np.inf
         for node in self.graph.uncolored_nodes:
-            if remaining_values[node.number] < min_remaining_values:
+            if node.number != 0 and remaining_values[node.number] < min_remaining_values:
                 min_remaining_values = remaining_values[node.number]
         # find all nodes with minimum number of values available
-        nodes_min_remaining = [i for i in range(len(remaining_values)) if remaining_values[i] == min_remaining_values]
+        nodes_min_remaining = []
+        for i in range(len(remaining_values)):
+            for uncolored_node in self.graph.uncolored_nodes:
+                if (remaining_values[i] == min_remaining_values) and (uncolored_node.number == i):
+                    nodes_min_remaining.append(i)
         # from nodes with minimum number of values, choose the node with the highest degree
         highest_degree = 0
         for node_number in nodes_min_remaining:
@@ -109,16 +113,22 @@ class BacktrackingWithBackjumping:
         self.conflict_set[node.number] = [0 for _ in range(self.graph.V)]
 
         # initialize current nodes domain
-        self.my_domains[node.number] = [True for _ in range(len(self.graph.colors))]
+        self.my_domains[node.number] = [True for _ in range(self.graph.k)]
 
         # remove color from dead end node
         lc_color = self.graph.nodes[last_conflict].color
         self.uncolor_node(self.graph.nodes[last_conflict], lc_color)
+        return True
 
     # after finding a solution, try to improve upon it by removing largest color from domain
     def try_to_improve(self):
-        self.graph.k = self.graph.colors_used_until_now - 1
-
+        self.graph.k = self.graph.colors_used_until_now-1
+        for node in self.graph.nodes:
+            if node.color == self.graph.k:
+                self.uncolor_node(node, self.graph.k)
+        for i in range(self.graph.V+1):
+            self.my_domains[i] = self.my_domains[i][:self.graph.k]
+            self.neighbors_constraints[i] = self.neighbors_constraints[i][:self.graph.k]
 
     # coloring search function
     def backtracking(self):

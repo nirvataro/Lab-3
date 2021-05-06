@@ -9,23 +9,16 @@ sys.setrecursionlimit(10000)
 
 def CSP_coloring(graph):
     back_jump = BacktrackingWithBackjumping(graph)
-    if back_jump.backtracking():
-        print(back_jump.graph)
-        for node in graph.nodes:
-            for neigh in node.neighbors:
-                if node.color == neigh.color:
-                    print(node.number, neigh, node.color, neigh.color)
-
     while True:
-        colored = forward_checking(graph)
-        if colored:
-            print(graph)
-        else:
-            print("Can't do better")
+        if back_jump.backtracking():
+            best_found = back_jump.graph.__deepcopy__()
+            print(back_jump.graph)
+            for node in back_jump.graph.nodes:
+                for neigh in node.neighbors:
+                    if node.color == neigh.color:
+                        print(node, neigh)
+        back_jump.try_to_improve()
 
-
-        if not graph.uncolored_nodes:
-            graph.find_better()
 
 
 def config_data(input_file):
