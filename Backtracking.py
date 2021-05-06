@@ -60,7 +60,7 @@ class BacktrackingWithBackjumping:
         try_colors = self.get_colors_by_LCV(self.graph.nodes[node_number])
         node_domain = self.my_domains[node_number]
 
-        # iterating through nodes colors, if node didnt use color in past and neighbors not using color
+        # iterating through nodes colors, if node didn't use color in past and neighbors not using color
         # than color is legal
         while not all(x == -1 for x in try_colors):
             # found legal color
