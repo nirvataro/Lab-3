@@ -87,7 +87,8 @@ class Graph:
         output = "Best Solution Found:\nNumber of colors: " + str(self.colors_used_until_now) + "\nNode Coloring:\n"
         output += "Number\tColor\n"
         for node in self.nodes:
-            output += str(node.number) + "\t" + str(node.color)
+            if node.number != 0:
+                output += "  " + str(node.number) + "\t  " + str(node.color) + "\n"
         return output
 
     # copy graph method

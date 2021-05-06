@@ -9,23 +9,26 @@ class BacktrackingWithBackjumping:
         # uses to keep track of conflicts entry time to conflict set
         self.conflict_counter = 1
         # all nodes conflict sets
-        self.conflict_set = [[0 for _ in range(self.graph.V)] * self.graph.V]
+        self.conflict_set = [[0 for _ in range(self.graph.V+1)] for _ in range(self.graph.V+1)]
         # domain of colors node tried using
-        self.my_domains = [[True for _ in range(self.graph.k)] for _ in range(self.graph.V)]
+        self.my_domains = [[True for _ in range(self.graph.k)] for _ in range(self.graph.V+1)]
         # domain of colors neighbors of nodes are colored in
-        self.neighbors_constraints = [[0 for _ in range(self.graph.k)] for _ in range(self.graph.V)]
+        self.neighbors_constraints = [[0 for _ in range(self.graph.k)] for _ in range(self.graph.V+1)]
 
     # finds minimum remaining values variable with Highest Degree
     def MRVandHD(self):
         # calculates number of colors available for each node
-        remaining_values = [0 for _ in range(self.graph.V)]
-        for node in range(self.graph.V):
+        remaining_values = [0 for _ in range(self.graph.V+1)]
+        for node in self.graph.uncolored_nodes:
             for color in range(self.graph.k):
-                if self.my_domains[node][color] and not self.neighbors_constraints[node][color]:
-                    remaining_values[node] += 1
+                if self.my_domains[node.number][color] and not self.neighbors_constraints[node.number][color]:
+                    remaining_values[node.number] += 1
 
         # find the minimum number of values available
-        min_remaining_values = min(remaining_values)
+        min_remaining_values = np.inf
+        for node in self.graph.uncolored_nodes:
+            if remaining_values[node.number] < min_remaining_values:
+                min_remaining_values = remaining_values[node.number]
         # find all nodes with minimum number of values available
         nodes_min_remaining = [i for i in range(len(remaining_values)) if remaining_values[i] == min_remaining_values]
         # from nodes with minimum number of values, choose the node with the highest degree
@@ -40,7 +43,6 @@ class BacktrackingWithBackjumping:
     def get_colors_by_LCV(self, node):
         neighbors = node.neighbors
         all_colors = [0 for _ in range(self.graph.k)]
-        best_color, constraints, best_constraint = None, 0, 0
         neighbors_colors = self.neighbors_constraints[node.number]
         tried_colors = self.my_domains[node.number]
 
@@ -54,11 +56,11 @@ class BacktrackingWithBackjumping:
 
         return all_colors
 
-    # check for node_number if exists a color, if so color the node
-    def try_to_color(self, node_number):
+    # check for node if exists a color, if so color the node
+    def try_to_color(self, node):
         # colors used in past by "node", and colors of "node"s neighbors
-        try_colors = self.get_colors_by_LCV(self.graph.nodes[node_number])
-        node_domain = self.my_domains[node_number]
+        try_colors = self.get_colors_by_LCV(node)
+        node_domain = self.my_domains[node.number]
 
         # iterating through nodes colors, if node didn't use color in past and neighbors not using color
         # than color is legal
@@ -68,7 +70,7 @@ class BacktrackingWithBackjumping:
             try_colors[color] = -1
             node_domain[color] = False
 
-            self.color_node(self.graph.nodes[node_number], color)
+            self.color_node(node, color)
             return True
         return False
 
@@ -93,31 +95,36 @@ class BacktrackingWithBackjumping:
             self.neighbors_constraints[neighbor.number][color] -= 1
 
     # backjump to position of no dead end
-    def backjump(self, node_number):
+    def backjump(self, node):
         # choosing dead end node by conflict set
-        last_conflict = np.argmax(self.conflict_set[node_number])
+        last_conflict = np.argmax(self.conflict_set[node.number])
         # if node has no conflicts -> no legal coloring exists
         if last_conflict == 0:
             return False
 
         # update conflict set of current node and last conflicts nodes
-        for i, conf in enumerate(self.conflict_set[node_number]):
+        for i, conf in enumerate(self.conflict_set[node.number]):
             if conf and i != last_conflict:
                 self.conflict_set[last_conflict][i] = conf
-        self.conflict_set[node_number] = [0 for _ in range(self.graph.V)]
+        self.conflict_set[node.number] = [0 for _ in range(self.graph.V)]
 
         # initialize current nodes domain
-        self.my_domains[node_number] = [True for _ in range(len(self.graph.colors))]
+        self.my_domains[node.number] = [True for _ in range(len(self.graph.colors))]
 
         # remove color from dead end node
         lc_color = self.graph.nodes[last_conflict].color
         self.uncolor_node(self.graph.nodes[last_conflict], lc_color)
 
+    # after finding a solution, try to improve upon it by removing largest color from domain
+    def try_to_improve(self):
+        self.graph.k = self.graph.colors_used_until_now - 1
+
+
     # coloring search function
     def backtracking(self):
-        while self.graph.uncolored_nodes:
-            next_node_number = self.MRVandHD()
-            if not self.try_to_color(next_node_number):
-                if not self.backjump(next_node_number):
+        while len(self.graph.uncolored_nodes) > 1:
+            next_node = self.MRVandHD()
+            if not self.try_to_color(next_node):
+                if not self.backjump(next_node):
                     return False
         return True

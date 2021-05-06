@@ -11,18 +11,18 @@ def CSP_coloring(graph):
     back_jump = BacktrackingWithBackjumping(graph)
     if back_jump.backtracking():
         print(back_jump.graph)
+        for node in graph.nodes:
+            for neigh in node.neighbors:
+                if node.color == neigh.color:
+                    print(node.number, neigh, node.color, neigh.color)
 
     while True:
         colored = forward_checking(graph)
-        colored = backtracking(graph)
         if colored:
             print(graph)
         else:
             print("Can't do better")
-        for node in graph.nodes:
-            for neigh in node.neighbors:
-                if node.color == graph.nodes[neigh].color:
-                    print(node.number, neigh, node.color, graph.nodes[neigh].color)
+
 
         if not graph.uncolored_nodes:
             graph.find_better()
