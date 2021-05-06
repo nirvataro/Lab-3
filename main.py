@@ -5,20 +5,21 @@ from ForwardChecking import forward_checking
 from Backtracking import BacktrackingWithBackjumping
 from Objective_local_search import objective_local_search
 from SimulatedAnnealing import SimulatedAnnealing as SA
+from draw_graph import draw_graph
 sys.setrecursionlimit(10000)
+
 
 def CSP_coloring(graph):
     back_jump = BacktrackingWithBackjumping(graph)
     while True:
         if back_jump.backtracking():
             best_found = back_jump.graph.__deepcopy__()
-            print(back_jump.graph)
+            draw_graph(back_jump.graph)
             for node in back_jump.graph.nodes:
                 for neigh in node.neighbors:
                     if node.color == neigh.color:
                         print(node, neigh)
         back_jump.try_to_improve()
-
 
 
 def config_data(input_file):

@@ -14,6 +14,8 @@ class BacktrackingWithBackjumping:
         self.my_domains = [[True for _ in range(self.graph.k)] for _ in range(self.graph.V+1)]
         # domain of colors neighbors of nodes are colored in
         self.neighbors_constraints = [[0 for _ in range(self.graph.k)] for _ in range(self.graph.V+1)]
+        # backjump stack
+        self.backjump_stack = []
 
     # finds minimum remaining values variable with Highest Degree
     def MRVandHD(self):
@@ -118,6 +120,7 @@ class BacktrackingWithBackjumping:
         # remove color from dead end node
         lc_color = self.graph.nodes[last_conflict].color
         self.uncolor_node(self.graph.nodes[last_conflict], lc_color)
+        self.backjump_stack.append(last_conflict)
         return True
 
     # after finding a solution, try to improve upon it by removing largest color from domain
@@ -133,7 +136,7 @@ class BacktrackingWithBackjumping:
     # coloring search function
     def backtracking(self):
         while len(self.graph.uncolored_nodes) > 1:
-            next_node = self.MRVandHD()
+            next_node = self.MRVandHD() if not self.backjump_stack else self.graph.nodes[self.backjump_stack.pop()]
             if not self.try_to_color(next_node):
                 if not self.backjump(next_node):
                     return False

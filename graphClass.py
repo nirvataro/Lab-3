@@ -45,11 +45,13 @@ class Graph:
         self.colored_nodes = []
         # current k best
         self.colors_used_until_now = 0
+        self.edges = []
 
     # adds an edge (v1, v2)
     def add_edge(self, v1, v2):
         self.nodes[v1].add_edge(self.nodes[v2])
         self.nodes[v2].add_edge(self.nodes[v1])
+        self.edges.append((str(v1), str(v2)))
 
     # colors "node" in "color", updates uncolored_nodes and colored_nodes
     def color_node(self, node, color):
@@ -90,6 +92,8 @@ class Graph:
             if node.number != 0:
                 output += "  " + str(node.number) + "\t  " + str(node.color) + "\n"
         return output
+
+
 
     # copy graph method
     def __deepcopy__(self):
