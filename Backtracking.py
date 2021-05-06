@@ -67,9 +67,10 @@ class BacktrackingWithBackjumping:
     # check for node if exists a color, if so color the node
     def try_to_color(self, node):
         # update conflict sets
-        for neigh in node.neighbors:
-            if neigh.color is not None:
-                self.conflict_set[node.number][neigh.number] = self.coloring_time[neigh.number]
+        if not self.backjump_stack:
+            for neigh in node.neighbors:
+                if neigh.color is not None:
+                    self.conflict_set[node.number][neigh.number] = self.coloring_time[neigh.number]
 
         # colors used in past by "node", and colors of "node"s neighbors
         try_colors = self.get_colors_by_LCV(node)
@@ -113,6 +114,7 @@ class BacktrackingWithBackjumping:
         # choosing dead end node by conflict set
         last_conflict = np.argmax(self.conflict_set[node.number])
         # if node has no conflicts -> no legal coloring exists
+        print("jump from {} to {}".format(node.number, last_conflict))
         if last_conflict == 0:
             return False
 
@@ -128,6 +130,8 @@ class BacktrackingWithBackjumping:
         # remove color from dead end node
         lc_color = self.graph.nodes[last_conflict].color
         self.uncolor_node(self.graph.nodes[last_conflict], lc_color)
+        for conf_set in self.conflict_set:
+            conf_set[last_conflict] = 0
         self.backjump_stack.append(last_conflict)
         return True
 
@@ -137,6 +141,8 @@ class BacktrackingWithBackjumping:
         for node in self.graph.nodes:
             if node.color == self.graph.k:
                 self.uncolor_node(node, self.graph.k)
+                for conf_set in self.conflict_set:
+                    conf_set[node.number] = 0
         for i in range(self.graph.V+1):
             self.my_domains[i] = self.my_domains[i][:self.graph.k]
             self.neighbors_constraints[i] = self.neighbors_constraints[i][:self.graph.k]
