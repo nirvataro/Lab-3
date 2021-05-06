@@ -66,6 +66,11 @@ class BacktrackingWithBackjumping:
 
     # check for node if exists a color, if so color the node
     def try_to_color(self, node):
+        # update conflict sets
+        for neigh in node.neighbors:
+            if neigh.color is not None:
+                self.conflict_set[node.number][neigh.number] = self.coloring_time[neigh.number]
+
         # colors used in past by "node", and colors of "node"s neighbors
         try_colors = self.get_colors_by_LCV(node)
         node_domain = self.my_domains[node.number]
@@ -90,11 +95,9 @@ class BacktrackingWithBackjumping:
         self.coloring_time[node.number] = self.conflict_counter
         self.conflict_counter += 1
 
-        # update conflict sets and neighbor constraints based on coloring
+        # update neighbor constraints based on coloring
         for neigh in node.neighbors:
             self.neighbors_constraints[neigh.number][color] += 1
-            if neigh.color is not None:
-                self.conflict_set[node.number][neigh.number] = self.coloring_time[neigh.number]
 
     # uncolor "node"
     def uncolor_node(self, node, color):
@@ -141,8 +144,10 @@ class BacktrackingWithBackjumping:
     # coloring search function
     def backtracking(self):
         while len(self.graph.uncolored_nodes) > 1:
-            next_node = self.MRVandHD() if not self.backjump_stack else self.graph.nodes[self.backjump_stack.pop()]
+            next_node = self.MRVandHD() if not self.backjump_stack else self.graph.nodes[self.backjump_stack[-1]]
             if not self.try_to_color(next_node):
                 if not self.backjump(next_node):
                     return False
+            elif self.backjump_stack:
+                self.backjump_stack.pop()
         return True

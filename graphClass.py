@@ -110,17 +110,36 @@ class Graph:
         return new
 
     # drawing the graph
-    def draw(self):
+    def draw(self, nodes=None, neighbors_node=None):
+        if nodes is None:
+            nodes = list(range(1, self.V+1))
+
+        nodes = set(nodes)
+        if neighbors_node is not None:
+            for node in neighbors_node:
+                for neigh in self.nodes[node].neighbors:
+                    nodes.add(neigh.number)
+
         G = nx.Graph()
-        G.add_nodes_from(list(range(1, self.V + 1)))
-        G.add_edges_from(self.edges)
+        G.add_nodes_from(nodes)
+        edges = []
+        for v1, v2 in self.edges:
+            if v1 in nodes and v2 in nodes:
+                edges.append((v1, v2))
+        G.add_edges_from(edges)
         node_color = ["#" + ''.join([random.choice('0123456789ABCDEF') for j in range(6)]) for i in range(self.k)]
 
         color_map = []
-        for node in self.nodes[1:]:
-            color_map.append(node_color[node.color])
+        for node in nodes:
+            color_map.append(node_color[self.nodes[node].color])
         nx.draw(G, node_color=color_map, with_labels=True)
+        # text = "Number of nodes: " + str(self.V) + "\nNumber of edges: " + str(self.E) + "\nDensity: " + \
+        #        str(self.density) + "\nNumber of colors: " + str(self.colors_used_until_now)
+
+        # plt.figtext(0.5, 0.01, text, ha="center", fontsize=18,
+        #            bbox={"facecolor": "cyan", "alpha": 0.5, "pad": 5})
         plt.show()
+
     # def initial_solution(self):
     #     for node in self.nodes:
     #         if not node.number:
@@ -132,26 +151,3 @@ class Graph:
     #                 self.color_node(node.number, color)
     #                 continue
     #     return self.best_k
-
-    # after finding a solution with k colors, try finding with k-1 colors
-    # def find_better(self):
-    #     k = self.best_k
-    #     for node in self.nodes:
-    #         self.uncolor_node(node.number)
-    #     for node in self.nodes:
-    #         node.domain = [i for i in range(k-1)]
-    #         node.possible_colors = node.possible_colors[:k - 1]
-    #     self.colors = self.colors[:k-1]
-    #     self.conflict_counter = 1
-
-    # def smaller_domain(self):
-    #     k = self.best_k
-    #     for node in self.nodes:
-    #         if node.color == (k-1):
-    #             self.uncolor_node(node.number)
-    #         if (k-1) in node.domain:
-    #             node.domain.remove(k-1)
-    #         node.possible_colors = node.possible_colors[:k-1]
-    #     self.colors = self.colors[:k-1]
-
-
