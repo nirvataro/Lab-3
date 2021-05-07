@@ -5,13 +5,14 @@ from sys import argv
 def main():
     file = "ex_70.txt"
     nodes_number = 70
+    edge_prob = 0.2
     file = open(file, "w+")
     text = ""
 
     count = 0
     for i in range(1, nodes_number+1):
         for j in range(i+1, nodes_number+1):
-            if random.random() < 0.2:
+            if random.random() < edge_prob:
                 text += "e " + str(i) + " " + str(j) + '\n'
                 count += 1
 
