@@ -135,15 +135,6 @@ class BacktrackingWithBackjumping:
         self.backjump_stack.append(last_conflict)
         return True
 
-    # after finding a solution, try to improve upon it by removing largest color from domain
-    def try_to_improve(self):
-        self.graph.reset_new_k(self.graph.colors_used_until_now-1)
-        self.conflict_counter = 1
-        self.coloring_time = [np.inf for _ in range(self.graph.V+1)]
-        self.conflict_set = [[0 for _ in range(self.graph.V+1)] for _ in range(self.graph.V+1)]
-        self.my_domains = [[True for _ in range(self.graph.k)] for _ in range(self.graph.V+1)]
-        self.neighbors_constraints = [[0 for _ in range(self.graph.k)] for _ in range(self.graph.V+1)]
-
     # coloring search function
     def backtracking(self):
         while len(self.graph.uncolored_nodes) > 1:
@@ -154,3 +145,12 @@ class BacktrackingWithBackjumping:
             elif self.backjump_stack:
                 self.backjump_stack.pop()
         return True
+
+    # after finding a solution, try to improve upon it by removing largest color from domain
+    def try_to_improve(self):
+        self.graph.reset_new_k(self.graph.colors_used_until_now-1)
+        self.conflict_counter = 1
+        self.coloring_time = [np.inf for _ in range(self.graph.V+1)]
+        self.conflict_set = [[0 for _ in range(self.graph.V+1)] for _ in range(self.graph.V+1)]
+        self.my_domains = [[True for _ in range(self.graph.k)] for _ in range(self.graph.V+1)]
+        self.neighbors_constraints = [[0 for _ in range(self.graph.k)] for _ in range(self.graph.V+1)]

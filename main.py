@@ -1,6 +1,6 @@
 import sys
 from graphClass import Graph
-from ForwardChecking import forward_checking
+from ForwardChecking import ForwardChecking
 from Backtracking import BacktrackingWithBackjumping
 from Objective_local_search import objective_local_search
 from SimulatedAnnealing import SimulatedAnnealing as SA
@@ -8,13 +8,11 @@ sys.setrecursionlimit(10000)
 
 
 def CSP_coloring(graph):
-    back_jump = BacktrackingWithBackjumping(graph)
-    while back_jump.backtracking():
-        print(back_jump.graph)
-        print("\n\n")
-        best_found = back_jump.graph.__deepcopy__()
-        back_jump.graph.draw()
-        back_jump.try_to_improve()
+    forward = ForwardChecking(graph)
+    while forward.forward_checking():
+        best_found = forward.graph.__deepcopy__()
+        forward.graph.draw()
+        forward.try_to_improve()
     print("could not find better")
 
 
