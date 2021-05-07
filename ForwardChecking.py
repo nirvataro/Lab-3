@@ -37,7 +37,7 @@ class ForwardChecking:
         for i, node in enumerate(mrv_list):
             mrv_list[i] = self.graph.nodes[node]
 
-        return mrv_list
+        return mrv_list[0]
 
     # finds least constraining color for "node"
     def get_colors_by_LCV(self, node, colors):
@@ -52,10 +52,9 @@ class ForwardChecking:
                 if self.neighbors_constraints[neigh.number][color] != 0:
                     color_constraints[color] += 1
 
-        colors.sort(key=(lambda x: color_constraints[x]))
+        colors.sort(key=(lambda x: color_constraints[x]), reverse=True)
         return colors
 
-    # ------------------------------------------------------------------------ #
     # color "node" with "color"
     def color_node(self, node, color):
         # use graphs coloring function
@@ -73,7 +72,6 @@ class ForwardChecking:
         # update neighbor constraints
         for neighbor in node.neighbors:
             self.neighbors_constraints[neighbor.number][color] -= 1
-    # ------------------------------------------------------------------------ #
 
     def arc_consistency(self, node):
         my_domain = [i for i in range(self.graph.k) if self.neighbors_constraints[node.number][i] == 0]
@@ -87,50 +85,20 @@ class ForwardChecking:
     def forward_checking(self):
         if len(self.graph.uncolored_nodes) == 1:
             return True
-        next_node_list = self.MRVandHD()
-        for next_node in next_node_list:
-            next_node_colors = self.arc_consistency(next_node)
-            next_node_colors = self.get_colors_by_LCV(next_node, next_node_colors)
-            if not next_node_colors:
-                return False
-            for color in next_node_colors:
-                self.color_node(next_node, color)
-                if not self.forward_checking():
-                    self.uncolor_node(next_node, next_node.color)
-                else:
-                    return True
+        next_node = self.MRVandHD()
+        next_node_colors = self.arc_consistency(next_node)
+        next_node_colors = self.get_colors_by_LCV(next_node, next_node_colors)
+        if not next_node_colors:
+            return False
+        for color in next_node_colors:
+            self.color_node(next_node, color)
+            if not self.forward_checking():
+                self.uncolor_node(next_node, next_node.color)
+            else:
+                return True
         return False
 
     # after finding a solution, try to improve upon it by removing largest color from domain
     def try_to_improve(self):
         self.graph.reset_new_k(self.graph.colors_used_until_now-1)
         self.neighbors_constraints = [[0 for _ in range(self.graph.k)] for _ in range(self.graph.V+1)]
-
-
-
-
-
-
- # def arc_consistency(self, G, node, colors):
- #        for c in colors:
- #            for neighbor in node.neighbors:
- #                if len(G.nodes[neighbor].domain) == 1 and (c in G.nodes[neighbor].domain):
- #                    colors.remove(c)
- #
- #    def forward_checking(self):
- #        if not self.graph.uncolored_nodes:
- #            return True
- #        nodes_by_MRV = self.MRVandHD()
- #        for node in nodes_by_MRV:
- #            colors_to_check = node.domain.copy()
- #            arc_consistency(G, node, colors_to_check)
- #            colors_to_check = LCV(G, node, colors_to_check)
- #            if not colors_to_check:
- #                return False
- #            for color in colors_to_check:
- #                G.color_node(node.number, color)
- #                if not forward_checking(G):
- #                    G.uncolor_node(node.number)
- #                else:
- #                    return True
- #        return False
