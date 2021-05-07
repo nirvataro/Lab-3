@@ -109,6 +109,11 @@ class Graph:
         new.edges = self.edges.copy()
         return new
 
+    def reset_new_k(self, k):
+        self.k = k
+        for node in self.nodes:
+            self.uncolor_node(node)
+
     # drawing the graph
     def draw(self, nodes=None, neighbors_node=None):
         if nodes is None:

@@ -10,6 +10,8 @@ sys.setrecursionlimit(10000)
 def CSP_coloring(graph):
     back_jump = BacktrackingWithBackjumping(graph)
     while back_jump.backtracking():
+        print(back_jump.graph)
+        print("\n\n")
         best_found = back_jump.graph.__deepcopy__()
         back_jump.graph.draw()
         back_jump.try_to_improve()
