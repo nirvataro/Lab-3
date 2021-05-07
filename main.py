@@ -11,7 +11,7 @@ def CSP_coloring(graph):
     forward = ForwardChecking(graph)
     while forward.forward_checking():
         best_found = forward.graph.__deepcopy__()
-        forward.graph.draw()
+        best_found.draw()
         forward.try_to_improve()
     print("could not find better")
 
@@ -28,6 +28,7 @@ def config_data(input_file):
         elif l.startswith('e '):
             l = l.replace('e ', '').split()
             graph.add_edge(int(l[0]), int(l[1]))
+    graph.preprocessing()
     return graph
 
 

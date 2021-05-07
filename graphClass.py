@@ -114,6 +114,14 @@ class Graph:
         for node in self.nodes:
             self.uncolor_node(node)
 
+    def preprocessing(self):
+        # upper bound of coloring is max degree+1
+        max_degree = 0
+        for node in self.nodes:
+            if len(node.neighbors) > max_degree:
+                max_degree = len(node.neighbors)
+        self.k = max_degree + 1
+
     # drawing the graph
     def draw(self, nodes=None, neighbors_node=None):
         if nodes is None:
@@ -138,21 +146,9 @@ class Graph:
         for node in nodes:
             color_map.append(node_color[self.nodes[node].color])
         nx.draw(G, node_color=color_map, with_labels=True)
-        # text = "Number of nodes: " + str(self.V) + "\nNumber of edges: " + str(self.E) + "\nDensity: " + \
-        #        str(self.density) + "\nNumber of colors: " + str(self.colors_used_until_now)
+        text = "Number of nodes: " + str(self.V) + "\nNumber of edges: " + str(self.E) + "\nDensity: " + \
+               str(self.density) + "\nNumber of colors: " + str(self.colors_used_until_now)
 
-        # plt.figtext(0.5, 0.01, text, ha="center", fontsize=18,
-        #            bbox={"facecolor": "cyan", "alpha": 0.5, "pad": 5})
+        plt.figtext(0.5, 0.01, text, ha="center", fontsize=18,
+                   bbox={"facecolor": "cyan", "alpha": 0.5, "pad": 5})
         plt.show()
-
-    # def initial_solution(self):
-    #     for node in self.nodes:
-    #         if not node.number:
-    #             continue
-    #         neighbors = [self.nodes[neighbor] for neighbor in node.neighbors]
-    #         neighbors_colors = [neighbor.color for neighbor in neighbors]
-    #         for color in range(len(self.colors)):
-    #             if color not in neighbors_colors:
-    #                 self.color_node(node.number, color)
-    #                 continue
-    #     return self.best_k

@@ -73,6 +73,7 @@ class ForwardChecking:
         for neighbor in node.neighbors:
             self.neighbors_constraints[neighbor.number][color] -= 1
 
+    # checks arc-consistency on given "node" using its neighbors constraints
     def arc_consistency(self, node):
         my_domain = [i for i in range(self.graph.k) if self.neighbors_constraints[node.number][i] == 0]
         for color in my_domain:
@@ -82,20 +83,33 @@ class ForwardChecking:
                     my_domain.remove(color)
         return my_domain
 
+    # main loop
     def forward_checking(self):
+        # checks if solution is found
         if len(self.graph.uncolored_nodes) == 1:
             return True
+
+        # using MRV+HD heuristics to select next node to color
         next_node = self.MRVandHD()
+        # use arc-consistency to make the domain smaller
         next_node_colors = self.arc_consistency(next_node)
-        next_node_colors = self.get_colors_by_LCV(next_node, next_node_colors)
+
+        # if no colors are useable for chosen node - backtrack
         if not next_node_colors:
             return False
+        # arrange the colors we should use by LCV
+        next_node_colors = self.get_colors_by_LCV(next_node, next_node_colors)
+
+        # check all colors in order to find a color that works
         for color in next_node_colors:
             self.color_node(next_node, color)
+            # if color doesn't work - uncolor and try the next one
             if not self.forward_checking():
                 self.uncolor_node(next_node, next_node.color)
+            # if color worked - found solution
             else:
                 return True
+        # unable to color with the given number
         return False
 
     # after finding a solution, try to improve upon it by removing largest color from domain
