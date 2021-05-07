@@ -138,6 +138,7 @@ class BacktrackingWithBackjumping:
     # coloring search function
     def backtracking(self):
         while len(self.graph.uncolored_nodes) > 1:
+            print(len(self.graph.uncolored_nodes))
             next_node = self.MRVandHD() if not self.backjump_stack else self.graph.nodes[self.backjump_stack[-1]]
             if not self.try_to_color(next_node):
                 if not self.backjump(next_node):

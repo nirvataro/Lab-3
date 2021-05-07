@@ -8,11 +8,11 @@ sys.setrecursionlimit(10000)
 
 
 def CSP_coloring(graph):
-    forward = ForwardChecking(graph)
-    while forward.forward_checking():
-        best_found = forward.graph.__deepcopy__()
+    search = BacktrackingWithBackjumping(graph)
+    while search.backtracking():
+        best_found = search.graph.__deepcopy__()
         best_found.draw()
-        forward.try_to_improve()
+        search.try_to_improve()
     print("could not find better")
 
 

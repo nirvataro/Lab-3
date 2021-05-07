@@ -85,6 +85,7 @@ class ForwardChecking:
 
     # main loop
     def forward_checking(self):
+        print(len(self.graph.uncolored_nodes))
         # checks if solution is found
         if len(self.graph.uncolored_nodes) == 1:
             return True
