@@ -1,5 +1,6 @@
 import sys
 from graphClass import Graph
+from Feasible_local_search import FeasibleLocalSearch
 from ForwardChecking import ForwardChecking
 from Backtracking import BacktrackingWithBackjumping
 from Objective_local_search import objective_local_search
@@ -8,12 +9,16 @@ sys.setrecursionlimit(10000)
 
 
 def CSP_coloring(graph):
-    search = ForwardChecking(graph)
-    while search.forward_checking():
-        best_found = search.graph.__deepcopy__()
-        best_found.draw()
-        search.try_to_improve()
-    print("could not find better")
+    f_search = FeasibleLocalSearch(graph, uncolored=True)
+    while True:
+        f_search.graph.draw()
+        f_search.try_one_color_less()
+        print("Looking for graph with {} colors".format(f_search.graph.k))
+        while not f_search.legal():
+            print(f_search)
+            SA(f_search, search_time=20, output=True)
+            print(f_search.fitness)
+        print("found")
 
 
 def config_data(input_file):
@@ -36,3 +41,11 @@ if __name__ == '__main__':
     input_file = sys.argv[1]
     graph = config_data(input_file)
     CSP_coloring(graph)
+
+
+    # search = ForwardChecking(graph)
+    # while search.forward_checking():
+    #     best_found = search.graph.__deepcopy__()
+    #     best_found.draw()
+    #     search.try_to_improve()
+    # print("could not find better")

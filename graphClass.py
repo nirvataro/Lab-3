@@ -109,8 +109,11 @@ class Graph:
         new.edges = self.edges.copy()
         return new
 
-    def reset_new_k(self, k):
-        self.k = k
+    def reset_new_k(self, k=None):
+        if k is None:
+            self.k = self.colors_used_until_now - 1
+        else:
+            self.k = k
         for node in self.nodes:
             self.uncolor_node(node)
 

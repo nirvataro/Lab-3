@@ -3,8 +3,8 @@ from sys import argv
 
 
 def main():
-    file = "ex_70.txt"
-    nodes_number = 70
+    file = "ex_5.txt"
+    nodes_number = 5
     edge_prob = 0.2
     file = open(file, "w+")
     text = ""
