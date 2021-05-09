@@ -3,18 +3,19 @@ import numpy as np
 import copy
 
 
-class ObjectiveLocalSearch:
+class HybridLocalSearch:
     def __init__(self, graph, uncolored=False):
         self.graph = graph.__deepcopy__()
         self.domains = [[0 for _ in range(self.graph.k)] for j in range(self.graph.V + 1)]
         self.nodes_with_color = [set() for _ in range(self.graph.k)]
+        self.bad_edges = [[] for _ in range(self.graph.k)]
         self.fitness = 0
         if uncolored:
             self.greedy_coloring()
             self.fitness = self.objective_function()
 
     def __deepcopy__(self):
-        new = ObjectiveLocalSearch(self.graph.__deepcopy__())
+        new = HybridLocalSearch(self.graph.__deepcopy__())
         new.nodes_with_color = copy.deepcopy(self.nodes_with_color)
         new.domains = copy.deepcopy(self.domains)
         new.fitness = new.objective_function()
@@ -41,51 +42,28 @@ class ObjectiveLocalSearch:
             self.domains[neigh.number][color] += 1
 
     def objective_function(self):
-        val = sum([len(color)**2 for color in self.nodes_with_color])
-        return val
-
-    def kempe_chains(self, node, new_color):
-        new = self.__deepcopy__()
-        true_new_color = new_color
-        old_color_nodes = set()
-        new_color_nodes = set()
-        old_color = node.color
-        new_nodes = [node.number]
-        while new_nodes:
-            neighbors = []
-            for node_number in new_nodes:
-                neighbors += [v.number for v in new.graph.nodes[node_number].neighbors if v.color == new_color]
-                old_color_nodes.add(node_number)
-            new_nodes = []
-            for v in neighbors:
-                if v not in new_color_nodes:
-                    new_nodes.append(v)
-            old_color, new_color = new_color, old_color
-            old_color_nodes, new_color_nodes = new_color_nodes, old_color_nodes
-        if true_new_color != new_color:
-            old_color, new_color = new_color, old_color
-            old_color_nodes, new_color_nodes = new_color_nodes, old_color_nodes
-        for v in old_color_nodes:
-            new.color_node(new.graph.nodes[v], new_color)
-        for v in new_color_nodes:
-            new.color_node(new.graph.nodes[v], old_color)
-
-        new.fitness = new.objective_function()
-        for nodes_color in new.nodes_with_color:
-            if not nodes_color:
-                new.update_k()
-
-        return new
+        for color in self.bad_edges:
+            color.clear()
+        for v1 in self.graph.nodes[1:]:
+            for v2 in v1.neighbors:
+                if v1.number < v2.number and v1.color == v2.color:
+                    self.bad_edges[v1.color].append((v1.number, v2.number))
+        val = 0
+        for color in range(self.graph.k):
+            val += 2*len(self.bad_edges[color])*len(self.nodes_with_color[color]) - len(self.nodes_with_color[color])**2
+        for color in self.nodes_with_color:
+            if not color:
+                self.update_k()
+        return -val
 
     def random_neighbor(self):
-        random_node = random.choice(self.graph.nodes[1:])
-        color_list = [i for i in range(self.graph.k) if i != random_node.color]
-        nodes_with_random_node_color = len(self.nodes_with_color[random_node.color])
-        total_nodes = self.graph.V - nodes_with_random_node_color
-        prob = np.array([len(nodes) for i, nodes in enumerate(self.nodes_with_color) if i != random_node.color])
-        prob = prob / sum(prob)
-        random_color = np.random.choice(color_list, p=prob)
-        return self.kempe_chains(random_node, random_color)
+        new = self.__deepcopy__()
+        random_node = random.choice(new.graph.nodes[1:])
+        color_list = [i for i in range(new.graph.k) if i != random_node.color]
+        random_color = random.choice(color_list)
+        new.color_node(random_node, random_color)
+        new.fitness = new.objective_function()
+        return new
 
     def MRVandHD(self):
         # calculates number of colors available for each node
@@ -146,7 +124,6 @@ class ObjectiveLocalSearch:
         self.graph.k = self.graph.colors_used_until_now
 
     def update_k(self):
-        print("found smaller k")
         for i, nodes_color in enumerate(self.nodes_with_color):
             if not nodes_color:
                 color = i

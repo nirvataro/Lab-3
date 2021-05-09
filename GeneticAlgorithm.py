@@ -12,127 +12,109 @@ GA_MUTATIONRATE = .25      # mutation rate
 ########################################
 
 
-# class of genetic (GA_STRUCT in cpp example)
-class Genetic(VRP):
-    def __init__(self, capacity, dist_mat, goods, permutation):
-        super().__init__(capacity, dist_mat, goods, config=permutation)
-        self.age = random.randint(0, 4)
+class Gen:
+    def __init__(self, graph, age=0):
+        self.graph = graph.__deepcopy__()
+        self.fitness = 0
+        self.age = age
 
+    def calculate_fitness(self):
+        return 0
 
-# PMX crossover from moodle
-class PMXCrossover:
+    def arrange_nodes(self):
+        pass
+
+    def mutate(self):
+        random_node = random.choice(self.graph.nodes[1:])
+        random_color = random.choice([i for i in range(self.graph.k) if i != random_node.color])
+        self.color_node(random_node, random_color)
+        self.fitness = self.calculate_fitness()
+
+class GeneticAlgorithm:
+    def __init__(self, graph, popsize=GA_POPSIZE, elite_rate=GA_ELITRATE, mutation_rate=GA_MUTATIONRATE):
+        self.empty_graph = graph
+        self.pop_size = popsize
+        self.elite_size = round(elite_rate*popsize)
+        self.mutation_rate = mutation_rate
+        self.gen_arr, self.buffer = self.init_population()
+
+    def init_population(self):
+        gen_arr = [self.random_coloring() for _ in range(self.pop_size)]
+        buffer = [None for _ in range(self.pop_size)]
+        return gen_arr, buffer
+
+    def random_coloring(self):
+        new_graph = self.empty_graph.__deepcopy__()
+        for node in new_graph.nodes:
+            random_color = random.choice(list(range(new_graph.k)))
+            new_graph.color_node(node, random_color)
+        age = random.randint(0, 4)
+        gen = Gen(new_graph, age=age)
+        gen.arrange_nodes()
+        gen.calculate_fitness()
+        return gen
+
+    # sorts population by key fitness value
+    def sort_by_fitness(self):
+        self.gen_arr.sort(key=lambda x: x.fitness)
+
+    # takes GA_ELITRATE percent to next generation
+    def elitism(self):
+        for i in range(self.elite_size):
+            self.buffer[i] = self.gen_arr[i].__deepcopy__()
+
     def crossover(self, gen1, gen2):
-        N = len(gen1.goods) - 1
-        iter = random.randint(1, int(N/2))
-        child = [i for i in gen1.config]
+        newgen = Gen(self.empty_graph)
+        for node_number in range(self.empty_graph.V):
+            color1 = gen1.graph.nodes[node_number].color
+            color2 = gen2.graph.nodes[node_number].color
+            color = random.choice([color1, color2])
+            newgen.color_node(node_number, color)
+        newgen.arrange_nodes()
+        newgen.calculate_fitness()
+        return newgen
 
-        # do PMX crossover a random number of times
-        for it in range(iter):
-            index = random.randint(0, N-1)
-            val1 = gen1.config[index]
-            val2 = gen2.config[index]
-            for i in range(N):
-                if child[i] == val1:
-                    child[i] = val2
-                elif child[i] == val2:
-                    child[i] = val1
-        return child
-
-
-# OX crossover from moodle
-class OXCrossover:
-    def crossover(self, gen1, gen2):
-        N = len(gen1.goods) - 1
-        child = [i for i in gen1.config]
-        # val1 will store half of the values randomly
-        val1 = random.sample(range(1, N+1), N // 2)
-        # val2 will store the remaining values
-        val2 = [i for i in gen2.config if i not in val1]
-        v2 = 0
-        for i in range(len(child)):
-            if child[i] not in val1:
-                child[i] = val2[v2]
-                v2 += 1
-        return child
-
-
-# for scaling the problem and creating a max instead min (for RWS, SUS) we used 1/sqrt(fitness scaling)
-def scale(gen_arr):
-    scaled_fit = [None for i in range(len(gen_arr))]
-    for i in range(len(gen_arr)):
-        scaled_fit[i] = 1/gen_arr[i].cost[0]**0.5
-    return sum(scaled_fit), scaled_fit
-
-
-# implementation of RWS selection type (uses scaling function above)
-class RWS:
-    def selection(self, gen_arr, parent=2):
+    # RWS selection
+    def selection(self):
         # sel will store selected parents to mate
-        sel = [None for i in range(parent)]
-        total_fitness, scaled_fit = scale(gen_arr)
-        for i in range(parent):
-            # randomize a number between 0-sum of all fitness, find where that gen is and use as parent
-            ran_selection = random.uniform(0, total_fitness)
-            current, j = 0, 0
-            while current < ran_selection:
-                current += scaled_fit[i]
-                j += 1
-            sel[i] = gen_arr[j]
-        return sel
+        total_fitness = sum([gen.fitness for gen in self.gen_arr])
 
+        # randomize a number between 0-sum of all fitness, find where that gen is and use as parent
+        ran_selection = random.uniform(0, total_fitness)
+        current, j = 0, 0
+        while current < ran_selection:
+            current += self.gen_arr[j].fitness
+            j += 1
+        parent1 = self.gen_arr[j]
+        # randomize a number between 0-sum of all fitness, find where that gen is and use as parent
+        ran_selection = random.uniform(0, total_fitness)
+        current, j = 0, 0
+        while current < ran_selection:
+            current += self.gen_arr[j].fitness
+            j += 1
+        parent2 = self.gen_arr[j]
+        return parent1, parent2
 
-class SUS:
-    def selection(self, gen_arr, parent=2):
-        sel = [None for i in range(parent)]
-        total_fitness, scaled_fit = scale(gen_arr)
-        # randomize only once as written in algorithm
-        # similar to implementation of RWS
-        ran = random.uniform(0, total_fitness/GA_POPSIZE)
-        delta = total_fitness/parent
-        for i in range(parent):
-            fitness = ran + i*delta
-            current, j = 0, 0
-            while current < fitness:
-                current += gen_arr[j].cost[0]
-                j += 1
-            sel[i] = gen_arr[j]
-        return sel
+    def mate(self):
+        self.elitism() # filling buffer with best of this generation
+        for gen in self.gen_arr:
+            gen.age += 1
 
+        can_mate = self.can_mate()
 
-class TOURNAMENT:
-    def selection(self, gen_arr, k_tour_size, parent=2):
-        sel = [None for i in range(parent)]
-        for i in range(parent):
-            # selects k random parents and uses best of them fot mating
-            tournament = random.choices(gen_arr, k=k_tour_size)
-            sel[i] = min(tournament, key=lambda x: x.cost[0])
-        return sel
+        # mating parents
+        for i in range(self.elite_size, self.pop_size):
+            p1, p2 = self.selection()
+            self.buffer[i] = self.crossover(p1, p2)
 
+            # in GA_MUTATIONRATE chance new child will mutate
+            if random.random() <= self.mutation_rate:
+                self.buffer[i].mutate()
+        self.buffer, self.gen_arr = self.gen_arr, self.buffer
 
 class REGULAR:
     def selection(self, gen_arr, k):
         return [gen_arr[random.randint(0, int(GA_POPSIZE/2))] for i in range(k)]
-
-
-def init_population(capacity, dist_matrix, goods):
-    pop, buffer = [], []
-    for i in range(GA_POPSIZE):
-        pop.append(Genetic(capacity, dist_matrix, goods, np.random.permutation(range(1, len(goods)))))
-        buffer.append(None)
-    return pop, buffer     # arrays of Genetic type population and buffer initialized
-
-
-# sorts population by key fitness value
-def sort_by_fitness(gen_arr):
-    gen_arr.sort(key=lambda x: x.cost[0])
-    return gen_arr
-
-
-# takes GA_ELITRATE percent to next generation
-def elitism(gen_arr, buffer, esize, capacity, dist_matrix, goods):
-    for i in range(esize):
-        buffer[i] = Genetic(capacity, dist_matrix, goods, permutation=gen_arr[i].config)
-    return buffer
 
 
 # Part 2 - Ex.2 creating array of possible parents by age
@@ -151,44 +133,12 @@ def birthday(gen_arr):
     return gen_arr
 
 
-class SwapMutation:
-    def mutate(self, gen):
-        index = random.sample(range(len(gen.goods)), 2)
-        temp = gen.config[index[0] - 1]
-        gen.config[index[0] - 1] = gen.config[index[1] - 1]
-        gen.config[index[1] - 1] = temp
-
-
-# scramble mutation as seen in word mutation file
-class ScrambleMutation:
-    def mutate(self, gen):
-        index = random.sample(list(range(len(gen.goods))), 2)
-        index.sort()
-        start, end = index[0], index[1]
-        gen.config[start:end] = np.random.permutation(gen.config[start:end])
-
-
 ##################################################################################################
 
 
 # generic mating function
 # supports elitism, aging, selection types, crossovers, possible string values, different target lengths
-def mate(gen_arr, buffer, crossover_type, selection_type, mut_type, capacity, dist_matrix, goods, min_age=0):
-    esize = int(GA_POPSIZE * GA_ELITRATE)       # number of elitism moving to next generation
-    buffer = elitism(gen_arr, buffer, esize, capacity, dist_matrix, goods)  # filling buffer with best of this generation
-    can_mate = ageing(gen_arr, min_age)         # generate possible parents
 
-    # mating parents
-    if len(can_mate) > 0:
-        for i in range(esize, GA_POPSIZE):
-            s = selection_type.selection(gen_arr, 2)
-            mut = crossover_type.crossover(s[0], s[1])
-            buffer[i] = Genetic(capacity, dist_matrix, goods, permutation=mut)
-
-            # in GA_MUTATIONRATE chance new child will mutate
-            if np.random.choice([True, False], p=[GA_MUTATIONRATE, 1-GA_MUTATIONRATE]):
-                mut_type.mutate(buffer[i])
-    return gen_arr, buffer
 
 
 # calculates average fitness of current generation

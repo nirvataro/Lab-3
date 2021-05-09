@@ -87,13 +87,9 @@ class FeasibleLocalSearch:
     def objective_function(self):
         function_value = 0
         for v1 in self.graph.nodes:
-            valid = 1
             for v2 in v1.neighbors:
-                if v1.color == v2.color:
-                    valid = 0
-                    break
-            function_value += valid * self.domains[v1.number].count(0)
-
+                if v1.color != v2.color:
+                    function_value += len(v1.neighbors)
         return function_value
 
     def find_bad_nodes(self):
@@ -106,10 +102,7 @@ class FeasibleLocalSearch:
         return list(bad_nodes)
 
     def random_neighbor(self):
-        illegal_nodes = self.find_bad_nodes()
-        if not illegal_nodes:
-            return None
-        random_node = random.choice(illegal_nodes)
+        random_node = random.choice(self.graph.nodes[1:])
         node_degree = len(random_node.neighbors)
         np_neighbors_colors = np.array(self.domains[random_node.number])
         np_neighbors_colors[random_node.color] = node_degree
@@ -117,25 +110,31 @@ class FeasibleLocalSearch:
         prob = prob / sum(prob)
 
         color_list = list(range(self.graph.k))
-
-        new_color = np.random.choice(color_list, p=prob)
+        new_color = np.argmax(prob) # np.random.choice(color_list, p=prob)
         new_graph = self.graph.__deepcopy__()
         new_graph_obj = FeasibleLocalSearch(new_graph)
+        print(new_color)
+        print(random_node)
         new_graph_obj.color_node(random_node, new_color)
         new_graph_obj.fitness = new_graph_obj.objective_function()
 
         return new_graph_obj
 
     def try_one_color_less(self):
+        color = [0 for _ in range(self.graph.k)]
         self.graph.k = self.graph.colors_used_until_now - 1
+        for node in self.graph.nodes[1:]:
+            color[node.color] += 1
+        bad_color = np.argmax(color)
         for node in self.graph.nodes:
             if node.color == self.graph.k:
+                self.color_node(node, bad_color)
+            elif node.color == bad_color:
                 new_color = random.choice(list(range(self.graph.k)))
                 self.color_node(node, new_color)
         for i in range(len(self.domains)):
             self.domains[i] = self.domains[i][:self.graph.k]
         self.fitness = self.objective_function()
-
 
     def legal(self):
         for v1 in self.graph.nodes:
@@ -143,6 +142,11 @@ class FeasibleLocalSearch:
                 if v1.color == v2.color:
                     return False
         return True
+
+    def random_color(self):
+        for node in self.graph.nodes[1:]:
+            self.color_node(node, 0)
+        self.fitness = self.objective_function()
 
     def __deepcopy__(self):
         new = FeasibleLocalSearch(self.graph.__deepcopy__())

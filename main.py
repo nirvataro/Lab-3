@@ -3,21 +3,21 @@ from graphClass import Graph
 from Feasible_local_search import FeasibleLocalSearch
 from ForwardChecking import ForwardChecking
 from Backtracking import BacktrackingWithBackjumping
-from Objective_local_search import objective_local_search
+from HybridLocalSearch import HybridLocalSearch as HLS
+from Objective_local_search import ObjectiveLocalSearch as OLS
 from SimulatedAnnealing import SimulatedAnnealing as SA
 sys.setrecursionlimit(10000)
 
 
 def CSP_coloring(graph):
-    f_search = FeasibleLocalSearch(graph, uncolored=True)
+    f_search = HLS(graph, uncolored=True)
+
     while True:
+        print(f_search.nodes_with_color)
+        f_search = SA(f_search, search_time=120, output=True).saBest
         f_search.graph.draw()
-        f_search.try_one_color_less()
-        print("Looking for graph with {} colors".format(f_search.graph.k))
-        while not f_search.legal():
-            print(f_search)
-            SA(f_search, search_time=20, output=True)
-            print(f_search.fitness)
+        print(f_search.nodes_with_color)
+        print(f_search.fitness)
         print("found")
 
 

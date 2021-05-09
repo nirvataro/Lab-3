@@ -34,13 +34,12 @@ class SimulatedAnnealing:
                     print("Improvement Found!")
                     print("Best:")
                     print(self.saBest.fitness)
-                    self.saBest.graph.draw()
+                    # self.saBest.graph.draw()
                     total_time = search_time-time_left
+                    print("")
                     print("Elapsed Time: ", total_time)
                     print("Total clock ticks: ", total_time * cpu_freq()[0] * 2 ** 20)
                     print("Total iteration: ", i, "\n")
-                if self.saBest.legal():
-                    break
 
             if random_neighbor.fitness > candidate.fitness or random.random() < chance:
                 candidate = random_neighbor
