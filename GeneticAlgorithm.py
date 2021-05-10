@@ -57,7 +57,7 @@ class GeneticAlgorithm:
 
     def crossover(self, gen1, gen2):
         newgen = self.local_search_type(self.empty_graph)
-        for node_number in range(self.empty_graph.V):
+        for node_number in range(1, self.empty_graph.V+1):
             color1 = gen1.graph.nodes[node_number].color
             color2 = gen2.graph.nodes[node_number].color
             color = random.choice([color1, color2])

@@ -52,9 +52,12 @@ class HybridLocalSearch:
                 if v1.number < v2.number and v1.color == v2.color:
                     self.bad_edges[v1.color].append((v1.number, v2.number))
 
-        for color in self.nodes_with_color:
-            if not color:
+        i = 0
+        while i < len(self.nodes_with_color)-1:
+            if not self.nodes_with_color[i]:
                 self.update_k()
+            i += 1
+
         val = 0
         for color in range(self.graph.k):
             val += 2*len(self.bad_edges[color])*len(self.nodes_with_color[color]) - len(self.nodes_with_color[color])**2
@@ -166,14 +169,15 @@ class HybridLocalSearch:
                 color = i
                 break
 
-        last_color = 0
-        for i, color_set in enumerate(self.nodes_with_color):
-            if color_set:
-                last_color = i
         if color is not None:
-            for node in self.graph.nodes[1:]:
-                if node.color == last_color:
-                    self.color_node(node, color)
+            last_color = 0
+            for i, color_set in enumerate(self.nodes_with_color):
+                if color_set:
+                    last_color = i
+
+            last_color_set = self.nodes_with_color[last_color].copy()
+            for node_number in last_color_set:
+                self.color_node(self.graph.nodes[node_number], color)
 
             self.graph.k = self.graph.colors_used_until_now
             for i in range(len(self.domains)):

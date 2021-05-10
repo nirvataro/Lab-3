@@ -1,7 +1,5 @@
-from CSPcoloringHeuristics import MRV, LCV
 import numpy as np
-import sys
-sys.setrecursionlimit(1000000)
+import time
 
 
 class ForwardChecking:
@@ -9,6 +7,7 @@ class ForwardChecking:
         self.graph = graph.__deepcopy__()
         # domain of colors neighbors of nodes are colored in
         self.neighbors_constraints = [[0 for _ in range(self.graph.k)] for _ in range(self.graph.V+1)]
+        self.states = 0
 
     # finds minimum remaining values variable with Highest Degree
     def MRVandHD(self):
@@ -84,11 +83,15 @@ class ForwardChecking:
         return my_domain
 
     # main loop
-    def forward_checking(self):
-        print(len(self.graph.uncolored_nodes))
+    def search(self, timer):
         # checks if solution is found
         if len(self.graph.uncolored_nodes) == 1:
             return True
+
+        if time.time() > timer:
+            return False
+
+        self.states += 1
 
         # using MRV+HD heuristics to select next node to color
         next_node = self.MRVandHD()
@@ -105,7 +108,7 @@ class ForwardChecking:
         for color in next_node_colors:
             self.color_node(next_node, color)
             # if color doesn't work - uncolor and try the next one
-            if not self.forward_checking():
+            if not self.search(timer):
                 self.uncolor_node(next_node, next_node.color)
             # if color worked - found solution
             else:

@@ -1,6 +1,5 @@
 import numpy as np
-import sys
-sys.setrecursionlimit(10000)
+import time
 
 
 class BacktrackingWithBackjumping:
@@ -17,6 +16,7 @@ class BacktrackingWithBackjumping:
         self.neighbors_constraints = [[0 for _ in range(self.graph.k)] for _ in range(self.graph.V+1)]
         # backjump stack
         self.backjump_stack = []
+        self.states = 0
 
     # finds minimum remaining values variable with Highest Degree
     def MRVandHD(self):
@@ -136,15 +136,18 @@ class BacktrackingWithBackjumping:
         return True
 
     # coloring search function
-    def backtracking(self):
+    def search(self, timer):
         while len(self.graph.uncolored_nodes) > 1:
-            print(len(self.graph.uncolored_nodes))
-            next_node = self.MRVandHD() if not self.backjump_stack else self.graph.nodes[self.backjump_stack[-1]]
-            if not self.try_to_color(next_node):
-                if not self.backjump(next_node):
-                    return False
-            elif self.backjump_stack:
-                self.backjump_stack.pop()
+            self.states += 1
+            if time.time() < timer:
+                next_node = self.MRVandHD() if not self.backjump_stack else self.graph.nodes[self.backjump_stack[-1]]
+                if not self.try_to_color(next_node):
+                    if not self.backjump(next_node):
+                        return False
+                elif self.backjump_stack:
+                    self.backjump_stack.pop()
+            else:
+                return False
         return True
 
     # after finding a solution, try to improve upon it by removing largest color from domain
