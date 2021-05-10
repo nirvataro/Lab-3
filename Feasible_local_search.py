@@ -5,11 +5,15 @@ import copy
 
 
 class FeasibleLocalSearch:
-    def __init__(self, graph, uncolored=False):
+    def __init__(self, graph, uncolored=False, random_coloring=False):
         self.graph = graph.__deepcopy__()
         self.domains = [[0 for _ in range(self.graph.k)] for j in range(self.graph.V+1)]
+        self.nodes_with_color = [set() for _ in range(self.graph.k)]
         if uncolored:
-            self.greedy_coloring()
+            if not random_coloring:
+                self.greedy_coloring()
+            else:
+                self.random_coloring()
         self.fitness = self.objective_function()
 
     # finds minimum remaining values variable with Highest Degree
@@ -66,6 +70,8 @@ class FeasibleLocalSearch:
             self.uncolor_node(node)
         self.graph.color_node(node, color)
 
+        self.nodes_with_color[color].add(node.number)
+
         for neigh in node.neighbors:
             self.domains[neigh.number][color] += 1
 
@@ -73,6 +79,8 @@ class FeasibleLocalSearch:
     def uncolor_node(self, node):
         color = node.color
         self.graph.uncolor_node(node)
+
+        self.nodes_with_color[color].remove(node.number)
 
         for neigh in node.neighbors:
             self.domains[neigh.number][color] -= 1
@@ -83,6 +91,31 @@ class FeasibleLocalSearch:
             next_node = self.MRVandHD()
             color = self.get_colors_by_LCV(next_node)
             self.color_node(next_node, color)
+
+    def random_coloring(self):
+        for node in self.graph.nodes:
+            random_color = random.choice(list(range(self.graph.k)))
+            self.color_node(node, random_color)
+        self.arrange_nodes()
+        self.fitness = self.objective_function()
+
+    def arrange_nodes(self):
+        for color, color_set in enumerate(self.nodes_with_color):
+            minimum_node = np.inf
+            minimum_set = 0
+            for j in range(color, len(self.nodes_with_color)):
+                min_node_temp = min(self.nodes_with_color[j])
+                if min_node_temp < minimum_node:
+                    minimum_node = min_node_temp
+                    minimum_set = j
+            self.swap_colors(minimum_set, color)
+
+    def swap_colors(self, color1, color2):
+        temp = [node_number for node_number in self.nodes_with_color[color1]]
+        for v in self.nodes_with_color[color1]:
+            self.color_node(self.graph.nodes[v], color2)
+        for v in temp:
+            self.color_node(self.graph.nodes[v], color1)
 
     def objective_function(self):
         function_value = 0

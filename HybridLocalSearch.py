@@ -4,14 +4,17 @@ import copy
 
 
 class HybridLocalSearch:
-    def __init__(self, graph, uncolored=False):
+    def __init__(self, graph, uncolored=False, random_coloring=False):
         self.graph = graph.__deepcopy__()
-        self.domains = [[0 for _ in range(self.graph.k)] for j in range(self.graph.V + 1)]
+        self.domains = [[0 for _ in range(self.graph.k)] for _ in range(self.graph.V + 1)]
         self.nodes_with_color = [set() for _ in range(self.graph.k)]
         self.bad_edges = [[] for _ in range(self.graph.k)]
         self.fitness = 0
         if uncolored:
-            self.greedy_coloring()
+            if not random_coloring:
+                self.greedy_coloring()
+            else:
+                self.random_coloring()
             self.fitness = self.objective_function()
 
     def __deepcopy__(self):
@@ -22,7 +25,7 @@ class HybridLocalSearch:
         return new
 
     def __str__(self):
-        return "BEST K: " + str(self.graph.global_best_k) + "\nMax K = " + str(len(self.graph.colors))
+        return "BEST K: " + str(self.graph.colors_used_until_now) + "\nFitness = " + str(self.fitness)
 
     def uncolor_node(self, node):
         color = node.color
@@ -48,12 +51,14 @@ class HybridLocalSearch:
             for v2 in v1.neighbors:
                 if v1.number < v2.number and v1.color == v2.color:
                     self.bad_edges[v1.color].append((v1.number, v2.number))
-        val = 0
-        for color in range(self.graph.k):
-            val += 2*len(self.bad_edges[color])*len(self.nodes_with_color[color]) - len(self.nodes_with_color[color])**2
+
         for color in self.nodes_with_color:
             if not color:
                 self.update_k()
+        val = 0
+        for color in range(self.graph.k):
+            val += 2*len(self.bad_edges[color])*len(self.nodes_with_color[color]) - len(self.nodes_with_color[color])**2
+
         return -val
 
     def random_neighbor(self):
@@ -123,19 +128,54 @@ class HybridLocalSearch:
         self.nodes_with_color = self.nodes_with_color[:self.graph.colors_used_until_now]
         self.graph.k = self.graph.colors_used_until_now
 
+    def random_coloring(self):
+        for node in self.graph.nodes[1:]:
+            random_color = random.choice(list(range(self.graph.k)))
+            self.color_node(node, random_color)
+        self.arrange_nodes()
+        self.fitness = self.objective_function()
+        for i in range(len(self.domains)):
+            self.domains[i] = self.domains[i][:self.graph.colors_used_until_now]
+        self.nodes_with_color = self.nodes_with_color[:self.graph.colors_used_until_now]
+        self.graph.k = self.graph.colors_used_until_now
+
+    def arrange_nodes(self):
+        for color, color_set in enumerate(self.nodes_with_color):
+            minimum_node = np.inf
+            minimum_set = 0
+            for j in range(color, len(self.nodes_with_color)):
+                if self.nodes_with_color[j]:
+                    min_node_temp = min(self.nodes_with_color[j])
+                    if min_node_temp < minimum_node:
+                        minimum_node = min_node_temp
+                        minimum_set = j
+            self.swap_colors(minimum_set, color)
+
+    def swap_colors(self, color1, color2):
+        temp1 = [node_number for node_number in self.nodes_with_color[color1]]
+        temp2 = [node_number for node_number in self.nodes_with_color[color2]]
+        for v in temp1:
+            self.color_node(self.graph.nodes[v], color2)
+        for v in temp2:
+            self.color_node(self.graph.nodes[v], color1)
+
     def update_k(self):
+        color = None
         for i, nodes_color in enumerate(self.nodes_with_color):
             if not nodes_color:
                 color = i
                 break
 
-        for node in self.graph.nodes[1:]:
-            if node.color == self.graph.k:
-                self.color_node(node, color)
+        last_color = 0
+        for i, color_set in enumerate(self.nodes_with_color):
+            if color_set:
+                last_color = i
+        if color is not None:
+            for node in self.graph.nodes[1:]:
+                if node.color == last_color:
+                    self.color_node(node, color)
 
-        self.nodes_with_color[color] = self.nodes_with_color[self.graph.k-1]
-
-        self.graph.k = self.graph.colors_used_until_now
-        for i in range(len(self.domains)):
-            self.domains[i] = self.domains[i][:self.graph.k]
-        self.nodes_with_color = self.nodes_with_color[:self.graph.k]
+            self.graph.k = self.graph.colors_used_until_now
+            for i in range(len(self.domains)):
+                self.domains[i] = self.domains[i][:last_color]
+            self.nodes_with_color = self.nodes_with_color[:last_color]

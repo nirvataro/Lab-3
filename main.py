@@ -6,19 +6,22 @@ from Backtracking import BacktrackingWithBackjumping
 from HybridLocalSearch import HybridLocalSearch as HLS
 from Objective_local_search import ObjectiveLocalSearch as OLS
 from SimulatedAnnealing import SimulatedAnnealing as SA
+from GeneticAlgorithm import GeneticAlgorithm as GA
 sys.setrecursionlimit(10000)
 
 
 def CSP_coloring(graph):
-    f_search = HLS(graph, uncolored=True)
+    f_search = GA(graph)
 
-    while True:
-        print(f_search.nodes_with_color)
-        f_search = SA(f_search, search_time=120, output=True).saBest
-        f_search.graph.draw()
-        print(f_search.nodes_with_color)
-        print(f_search.fitness)
-        print("found")
+    f_search.genetic()
+
+    # while True:
+    #     print(f_search.nodes_with_color)
+    #     f_search = SA(f_search, search_time=120, output=True).saBest
+    #     f_search.graph.draw()
+    #     print(f_search.nodes_with_color)
+    #     print(f_search.fitness)
+    #     print("found")
 
 
 def config_data(input_file):

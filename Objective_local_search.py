@@ -4,13 +4,16 @@ import copy
 
 
 class ObjectiveLocalSearch:
-    def __init__(self, graph, uncolored=False):
+    def __init__(self, graph, uncolored=False, random_coloring=False):
         self.graph = graph.__deepcopy__()
         self.domains = [[0 for _ in range(self.graph.k)] for j in range(self.graph.V + 1)]
         self.nodes_with_color = [set() for _ in range(self.graph.k)]
         self.fitness = 0
         if uncolored:
-            self.greedy_coloring()
+            if not random_coloring:
+                self.greedy_coloring()
+            else:
+                self.random_coloring()
             self.fitness = self.objective_function()
 
     def __deepcopy__(self):
@@ -21,7 +24,7 @@ class ObjectiveLocalSearch:
         return new
 
     def __str__(self):
-        return "BEST K: " + str(self.graph.global_best_k) + "\nMax K = " + str(len(self.graph.colors))
+        return "BEST K: " + str(self.graph.colors_used_until_now) + "\nFitness = " + str(self.fitness)
 
     def uncolor_node(self, node):
         color = node.color
@@ -144,6 +147,32 @@ class ObjectiveLocalSearch:
             self.domains[i] = self.domains[i][:self.graph.colors_used_until_now]
         self.nodes_with_color = self.nodes_with_color[:self.graph.colors_used_until_now]
         self.graph.k = self.graph.colors_used_until_now
+
+    def random_coloring(self):
+        for node in self.graph.nodes:
+            color_list = [i for i in self.domains[node.number] if self.domains[node.number][i]==0]
+            random_color = random.choice(color_list)
+            self.color_node(node, random_color)
+        self.arrange_nodes()
+        self.fitness = self.objective_function()
+
+    def arrange_nodes(self):
+        for color, color_set in enumerate(self.nodes_with_color):
+            minimum_node = np.inf
+            minimum_set = 0
+            for j in range(color, len(self.nodes_with_color)):
+                min_node_temp = min(self.nodes_with_color[j])
+                if min_node_temp < minimum_node:
+                    minimum_node = min_node_temp
+                    minimum_set = j
+            self.swap_colors(minimum_set, color)
+
+    def swap_colors(self, color1, color2):
+        temp = [node_number for node_number in self.nodes_with_color[color1]]
+        for v in self.nodes_with_color[color1]:
+            self.color_node(self.graph.nodes[v], color2)
+        for v in temp:
+            self.color_node(self.graph.nodes[v], color1)
 
     def update_k(self):
         print("found smaller k")
