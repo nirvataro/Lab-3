@@ -3,11 +3,11 @@ import time
 from graphClass import Graph
 from ForwardChecking import ForwardChecking as FC
 from Backtracking import BacktrackingWithBackjumping as BB
-from HybridLocalSearch import HybridLocalSearch as HLS
-from Objective_local_search import ObjectiveLocalSearch as OLS
-from Feasible_local_search import FeasibleLocalSearch as FLS
-from SimulatedAnnealing import SimulatedAnnealing as SA
-from GeneticAlgorithm import GeneticAlgorithm as GA
+# from HybridLocalSearch import HybridLocalSearch as HLS
+# from Objective_local_search import ObjectiveLocalSearch as OLS
+# from Feasible_local_search import FeasibleLocalSearch as FLS
+# from SimulatedAnnealing import SimulatedAnnealing as SA
+# from GeneticAlgorithm import GeneticAlgorithm as GA
 sys.setrecursionlimit(10000)
 
 
@@ -19,6 +19,7 @@ def CSP_coloring(graph, algorithm, search_time):
     search = algorithm(graph)
     end_time = time.time() + search_time
     time_left = end_time - time.time()
+    print(graph)
     print("Looking for initial solution")
     while time_left > 0:
         if search.search(end_time):

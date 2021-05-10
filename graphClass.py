@@ -49,6 +49,25 @@ class Graph:
         self.colors_used_until_now = 0
         self.edges = []
 
+    # how I print a graph
+    def __str__(self):
+        output = "Graph details:\n\tNumber of vertices: " + str(self.V) + "\n\tNumber of edges: " + str(self.E) + "\n\tGraph density: " + str(self.density) + "\n"
+        return output
+
+    # copy graph method
+    def __deepcopy__(self):
+        new = Graph(self.V, self.E, self.k, copy=True)
+        new.nodes = [node.__deepcopy__() for node in self.nodes]
+        for v1 in new.nodes:
+            for v2 in self.nodes[v1.number].neighbors:
+                v1.add_edge(new.nodes[v2.number])
+        new.uncolored_nodes = [new.nodes[node.number] for node in self.uncolored_nodes]
+        new.colored_nodes = [new.nodes[node.number] for node in self.colored_nodes]
+        new.colors_used_until_now = self.colors_used_until_now
+        new.times_used_color = self.times_used_color.copy()
+        new.edges = self.edges.copy()
+        return new
+
     # adds an edge (v1, v2)
     def add_edge(self, v1, v2):
         self.nodes[v1].add_edge(self.nodes[v2])
@@ -85,29 +104,6 @@ class Graph:
             node.color = None
             if self.times_used_color[old_color] == 0:
                 self.colors_used_until_now -= 1
-
-    # how I print a graph
-    def __str__(self):
-        output = "Best Solution Found:\nNumber of colors: " + str(self.colors_used_until_now) + "\nNode Coloring:\n"
-        output += "Number\tColor\n"
-        for node in self.nodes:
-            if node.number != 0:
-                output += "  " + str(node.number) + "\t  " + str(node.color) + "\n"
-        return output
-
-    # copy graph method
-    def __deepcopy__(self):
-        new = Graph(self.V, self.E, self.k, copy=True)
-        new.nodes = [node.__deepcopy__() for node in self.nodes]
-        for v1 in new.nodes:
-            for v2 in self.nodes[v1.number].neighbors:
-                v1.add_edge(new.nodes[v2.number])
-        new.uncolored_nodes = [new.nodes[node.number] for node in self.uncolored_nodes]
-        new.colored_nodes = [new.nodes[node.number] for node in self.colored_nodes]
-        new.colors_used_until_now = self.colors_used_until_now
-        new.times_used_color = self.times_used_color.copy()
-        new.edges = self.edges.copy()
-        return new
 
     def reset_new_k(self, k=None):
         if k is None:
