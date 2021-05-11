@@ -49,4 +49,3 @@ if __name__ == '__main__':
     time_limit = int(sys.argv[3])
     graph = config_data(input_file)
     CSP_coloring(graph, algorithm, time_limit)
-

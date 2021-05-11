@@ -38,6 +38,7 @@ class GeneticAlgorithm:
 
         return output
 
+    # initializes population randomly
     def init_population(self):
         gen_arr = [HLS(self.empty_graph, uncolored=True, random_coloring=True) for _ in range(self.pop_size)]
         buffer = [None for _ in range(self.pop_size)]
@@ -58,6 +59,8 @@ class GeneticAlgorithm:
         for i in range(self.elite_size):
             self.buffer[i] = self.gen_arr[i].__deepcopy__()
 
+    # crossover method - if one of the parents is legal pass their color to child
+    # otherwise, randomly choose a color between them
     def crossover(self, gen1, gen2):
         newgen = HLS(self.empty_graph)
         for node_number in range(1, self.empty_graph.V+1):
@@ -73,6 +76,7 @@ class GeneticAlgorithm:
         newgen.fitness = newgen.objective_function()
         return newgen
 
+    # checks if a node has a neighbor of same color
     def is_violating(self, node):
         for neighbor in node.neighbors:
             if node.color == neighbor.color:
@@ -100,27 +104,36 @@ class GeneticAlgorithm:
         parent2 = can_mate[j-1]
         return parent1, parent2
 
+    # mutates a gen by replacing it with a random neighbor
     def mutate(self, gen):
         return gen.random_neighbor()
 
+    # creates a new generation from the previous one
     def mate(self):
+        # moves the best from this generation to the new one
         self.elitism()
+
+        # updates ages of gens
         for i, age in enumerate(self.ages):
             self.ages[i] += 1
 
+        # finds gens that are mature enough to mate
         can_mate = self.can_mate()
 
         # mating parents
         for i in range(self.elite_size, self.pop_size):
             p1, p2 = self.selection(can_mate)
             self.buffer[i] = self.crossover(p1, p2)
+            # zeroing new gens ages
             self.ages[i] = 0
 
-            # in GA_MUTATIONRATE chance new child will mutate
+            # randomly mutates a gen
             if random.random() <= self.mutation_rate:
                 self.buffer[i] = self.mutate(self.buffer[i])
+        # swaps gen_arr and buffer
         self.buffer, self.gen_arr = self.gen_arr, self.buffer
 
+    # chooses the gens that can mate according to age
     def can_mate(self):
         can_mate = []
         for i, gen in enumerate(self.gen_arr):
@@ -136,6 +149,7 @@ class GeneticAlgorithm:
         fit_arr = [g.fitness for g in self.gen_arr]
         return np.std(fit_arr)
 
+    # main loop of search
     def genetic(self, search_time=120):
         end_time = time.time() + search_time
         time_left = end_time - time.time()
@@ -152,4 +166,3 @@ class GeneticAlgorithm:
         total_time = time.time() - total_timer
         print("Total time : {}\nTotal clock ticks : {}\nTotal iterations:{}".format(total_time, total_time * cpu_freq()[
             0] * 2 ** 20, self.iterations + 1))
-
