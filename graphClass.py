@@ -148,6 +148,6 @@ class Graph:
         text = "Number of nodes: " + str(self.V) + "\nNumber of edges: " + str(self.E) + "\nDensity: " + \
                str(self.density) + "\nNumber of colors: " + str(self.colors_used_until_now)
 
-        plt.figtext(0.5, 0.01, text, ha="left", va='bottom', fontsize=16,
+        plt.figtext(0.5, 0.01, text, ha="right", va='bottom', fontsize=14,
                    bbox={"facecolor": "cyan", "alpha": 0.5, "pad": 5})
         plt.show()
