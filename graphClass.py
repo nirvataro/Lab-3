@@ -15,7 +15,7 @@ class Node:
             self.neighbors.append(v2)
 
     def __str__(self):
-        return "Node Number: " + str(self.number) + "\nNode Color: " + str(self.color) +"\n"
+        return "Node Number: " + str(self.number) + "\nNode Color: " + str(self.color) + "\n"
 
     def __deepcopy__(self):
         new = Node(self.number, self.color)
@@ -139,7 +139,7 @@ class Graph:
             if v1 in nodes and v2 in nodes:
                 edges.append((v1, v2))
         G.add_edges_from(edges)
-        node_color = ["#" + ''.join([random.choice('0123456789ABCDEF') for j in range(6)]) for i in range(self.k)]
+        node_color = ["#" + ''.join([random.choice('0123456789ABCDEF') for _ in range(6)]) for _ in range(self.k)]
 
         color_map = []
         for node in nodes:
@@ -148,6 +148,6 @@ class Graph:
         text = "Number of nodes: " + str(self.V) + "\nNumber of edges: " + str(self.E) + "\nDensity: " + \
                str(self.density) + "\nNumber of colors: " + str(self.colors_used_until_now)
 
-        plt.figtext(0.5, 0.01, text, ha="center", fontsize=18,
+        plt.figtext(0.5, 0.01, text, ha="left", va='bottom', fontsize=16,
                    bbox={"facecolor": "cyan", "alpha": 0.5, "pad": 5})
         plt.show()
