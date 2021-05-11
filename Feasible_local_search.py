@@ -27,6 +27,10 @@ class FeasibleLocalSearch:
             # initializes try_graph
             self.try_one_color_less()
 
+    # print method
+    def __str__(self):
+        return "Best K: " + str(self.graph.colors_used_until_now) + "\nFitness = " + str(self.fitness)
+
     # copy method
     def __deepcopy__(self):
         new = FeasibleLocalSearch(self.graph.__deepcopy__())

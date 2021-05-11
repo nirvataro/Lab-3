@@ -1,16 +1,13 @@
 import sys
-import time
 from graphClass import Graph
 from HybridLocalSearch import HybridLocalSearch as HLS
 from Objective_local_search import ObjectiveLocalSearch as OLS
 from Feasible_local_search import FeasibleLocalSearch as FLS
-from GeneticAlgorithm import GeneticAlgorithm as GA
 from SimulatedAnnealing import SimulatedAnnealing as SA
-sys.setrecursionlimit(10000)
 
 
-algorithmDictionary = {0: HLS, 1: OLS, 2: FLS, 3: GA}
-printDictionary = {0: "Hybrid Approach", 1: "Objective Function Approach", 2: "Feasible Approach", 3: "Genetic Algorithm"}
+algorithmDictionary = {0: HLS, 1: OLS, 2: FLS}
+printDictionary = {0: "Hybrid Approach", 1: "Objective Function Approach", 2: "Feasible Approach"}
 
 
 def CSP_coloring(graph, algorithm, search_time):
@@ -24,7 +21,7 @@ def CSP_coloring(graph, algorithm, search_time):
     sa_object.sa_search(search_time=search_time, output=True)
 
     print("---------------TIMED OUT---------------\n")
-    print("Best solution found for K={}\nTotal states: {}\n".format(sa_object.saBest.graph.colors_used_until_now, sa_object.iterations))
+    print("Best solution found for K={}\nTotal iterations: {}\n".format(sa_object.saBest.graph.colors_used_until_now, sa_object.iterations))
     show_graph = input("Do you want to see the graph coloring? Y/N\n")
     if show_graph in ['y', 'Y']:
         sa_object.saBest.graph.draw()

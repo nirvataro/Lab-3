@@ -3,9 +3,6 @@ import time
 import numpy as np
 from psutil import cpu_freq
 from HybridLocalSearch import HybridLocalSearch as HLS
-from Objective_local_search import ObjectiveLocalSearch as OLS
-from Feasible_local_search import FeasibleLocalSearch as FLS
-
 
 ############## constants ###############
 GA_POPSIZE = 1000        # ga population size
@@ -15,28 +12,34 @@ GA_MUTATIONRATE = .25      # mutation rate
 
 
 class GeneticAlgorithm:
-    def __init__(self, graph, type='HLS',popsize=GA_POPSIZE, elite_rate=GA_ELITRATE, mutation_rate=GA_MUTATIONRATE):
-        typeDictionary = {'HLS': HLS, 'OLS': OLS, 'FLS': FLS}
-        self.local_search_type = typeDictionary[type]
+    def __init__(self, graph, popsize=GA_POPSIZE, elite_rate=GA_ELITRATE, mutation_rate=GA_MUTATIONRATE):
+        # uncolored graph of the graph we are trying to color
         self.empty_graph = graph
+        # size of population
         self.pop_size = popsize
+        # number of gens that continue to next generation
         self.elite_size = round(elite_rate*popsize)
+        # the chance of mutation in gen
         self.mutation_rate = mutation_rate
+        # arrays of current and next generation
         self.gen_arr, self.buffer = self.init_population()
+        # ages of gens
         self.ages = [random.randint(0, 4) for _ in range(self.pop_size)]
+        # best fitness
         self.best_fitness = 0
+        # iteration count
+        self.iterations = 0
 
+    # print method
     def __str__(self):
-        output = ""
-        output += "Genetic Algorithm:\n"
-        output += str(self.gen_arr[0])
+        output = str(self.gen_arr[0])
         output += "\nAvg fitness of gen: {}".format(self.avg_fit())
         output += "\nFitness STD: {}".format(self.std_fit())
 
         return output
 
     def init_population(self):
-        gen_arr = [self.local_search_type(self.empty_graph, uncolored=True, random_coloring=True) for _ in range(self.pop_size)]
+        gen_arr = [HLS(self.empty_graph, uncolored=True, random_coloring=True) for _ in range(self.pop_size)]
         buffer = [None for _ in range(self.pop_size)]
         return gen_arr, buffer
 
@@ -56,15 +59,25 @@ class GeneticAlgorithm:
             self.buffer[i] = self.gen_arr[i].__deepcopy__()
 
     def crossover(self, gen1, gen2):
-        newgen = self.local_search_type(self.empty_graph)
+        newgen = HLS(self.empty_graph)
         for node_number in range(1, self.empty_graph.V+1):
-            color1 = gen1.graph.nodes[node_number].color
-            color2 = gen2.graph.nodes[node_number].color
-            color = random.choice([color1, color2])
+            if not self.is_violating(gen1.graph.nodes[node_number]):
+                newgen.color_node(newgen.graph.nodes[node_number], gen1.graph.nodes[node_number].color)
+                continue
+            if not self.is_violating(gen2.graph.nodes[node_number]):
+                newgen.color_node(newgen.graph.nodes[node_number], gen2.graph.nodes[node_number].color)
+                continue
+            color = random.choice([gen1.graph.nodes[node_number].color, gen2.graph.nodes[node_number].color])
             newgen.color_node(newgen.graph.nodes[node_number], color)
         newgen.arrange_nodes()
         newgen.fitness = newgen.objective_function()
         return newgen
+
+    def is_violating(self, node):
+        for neighbor in node.neighbors:
+            if node.color == neighbor.color:
+                return True
+        return False
 
     # RWS selection
     def selection(self, can_mate):
@@ -77,14 +90,14 @@ class GeneticAlgorithm:
         while current < ran_selection:
             current += can_mate[j].fitness
             j += 1
-        parent1 = can_mate[j]
+        parent1 = can_mate[j-1]
         # randomize a number between 0-sum of all fitness, find where that gen is and use as parent
         ran_selection = random.uniform(0, total_fitness)
         current, j = 0, 0
         while current < ran_selection:
             current += can_mate[j].fitness
             j += 1
-        parent2 = can_mate[j]
+        parent2 = can_mate[j-1]
         return parent1, parent2
 
     def mutate(self, gen):
@@ -101,6 +114,7 @@ class GeneticAlgorithm:
         for i in range(self.elite_size, self.pop_size):
             p1, p2 = self.selection(can_mate)
             self.buffer[i] = self.crossover(p1, p2)
+            self.ages[i] = 0
 
             # in GA_MUTATIONRATE chance new child will mutate
             if random.random() <= self.mutation_rate:
@@ -126,7 +140,6 @@ class GeneticAlgorithm:
         end_time = time.time() + search_time
         time_left = end_time - time.time()
         total_timer = time.time()
-        i = 0
         while time_left > 0:
             gen_timer = time.time()
 
@@ -134,9 +147,9 @@ class GeneticAlgorithm:
             self.mate()
 
             time_left = end_time - time.time()
-            i += 1
+            self.iterations += 1
 
         total_time = time.time() - total_timer
         print("Total time : {}\nTotal clock ticks : {}\nTotal iterations:{}".format(total_time, total_time * cpu_freq()[
-            0] * 2 ** 20, i + 1))
+            0] * 2 ** 20, self.iterations + 1))
 
