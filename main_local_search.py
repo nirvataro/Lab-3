@@ -53,5 +53,3 @@ if __name__ == '__main__':
     graph = config_data(input_file)
     CSP_coloring(graph, algorithm, time_limit)
 
-    # f_search = GA(graph)
-    # f_search.genetic()
