@@ -83,8 +83,6 @@ class ObjectiveLocalSearch:
     def random_neighbor(self):
         random_node = random.choice(self.graph.nodes[1:])
         color_list = [i for i in range(self.graph.k) if i != random_node.color]
-        nodes_with_random_node_color = len(self.nodes_with_color[random_node.color])
-        total_nodes = self.graph.V - nodes_with_random_node_color
         prob = np.array([len(nodes) for i, nodes in enumerate(self.nodes_with_color) if i != random_node.color])
         prob = prob / sum(prob)
         random_color = np.random.choice(color_list, p=prob)

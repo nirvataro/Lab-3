@@ -5,16 +5,15 @@ from psutil import cpu_freq
 
 
 class SimulatedAnnealing:
-    def __init__(self, search_graph, search_time=120, output=False):
+    def __init__(self, search_graph):
         self.saBest = search_graph
-        self.sa_search(search_time, output)
+        self.iterations = 0
 
     # SA search method
-    def sa_search(self, search_time, output):
+    def sa_search(self, search_time=120, output=False):
         candidate = self.saBest.__deepcopy__()
         end_time = time.time() + search_time
         time_left = end_time - time.time()
-        i = 0
         while time_left > 0:
             # temperature is proportional to time left
             temp = 90 * time_left / search_time
@@ -32,18 +31,15 @@ class SimulatedAnnealing:
                 self.saBest.objective_function()
                 if output:
                     print("Improvement Found!")
-                    print("Best:")
-                    print(self.saBest.fitness)
-                    # self.saBest.graph.draw()
+                    print("Best: ", str(self.saBest.fitness))
                     total_time = search_time-time_left
-                    print("")
                     print("Elapsed Time: ", total_time)
                     print("Total clock ticks: ", total_time * cpu_freq()[0] * 2 ** 20)
-                    print("Total iteration: ", i, "\n")
+                    print("Total iteration: ", self.iterations, "\n")
 
             if random_neighbor.fitness > candidate.fitness or random.random() < chance:
                 candidate = random_neighbor
-            i += 1
+            self.iterations += 1
             time_left = end_time - time.time()
 
     # print method

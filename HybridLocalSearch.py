@@ -5,18 +5,26 @@ import copy
 
 class HybridLocalSearch:
     def __init__(self, graph, uncolored=False, random_coloring=False):
+        # the graph we will try to color
         self.graph = graph.__deepcopy__()
+        # domain of each node
         self.domains = [[0 for _ in range(self.graph.k)] for _ in range(self.graph.V + 1)]
+        # color sets of nodes with the same color
         self.nodes_with_color = [set() for _ in range(self.graph.k)]
+        # list of edges that both vertices are the same color
         self.bad_edges = [[] for _ in range(self.graph.k)]
+        # graph objective function value
         self.fitness = 0
+        # when trying to improve a graph we will create a copy of the graph and improve it
         if uncolored:
             if not random_coloring:
                 self.greedy_coloring()
             else:
+                # for genetic algorithm
                 self.random_coloring()
             self.fitness = self.objective_function()
 
+    # copy method
     def __deepcopy__(self):
         new = HybridLocalSearch(self.graph.__deepcopy__())
         new.nodes_with_color = copy.deepcopy(self.nodes_with_color)
@@ -24,27 +32,36 @@ class HybridLocalSearch:
         new.fitness = new.objective_function()
         return new
 
+    # print method
     def __str__(self):
         return "BEST K: " + str(self.graph.colors_used_until_now) + "\nFitness = " + str(self.fitness)
 
+    # remove color from "node"
     def uncolor_node(self, node):
         color = node.color
         self.graph.uncolor_node(node)
+
+        # update domains and nodes with color
         self.nodes_with_color[color].remove(node.number)
         for neigh in node.neighbors:
             self.domains[neigh.number][color] -= 1
 
+    # colors "node" in "color"
     def color_node(self, node, color):
+        # if node is already colored, remove it's color first
         if node.color is not None:
             self.uncolor_node(node)
         self.graph.color_node(node, color)
 
+        # update domains and nodes with color
         self.nodes_with_color[color].add(node.number)
 
         for neigh in node.neighbors:
             self.domains[neigh.number][color] += 1
 
+    # fitness calculation function, as seen in lecture
     def objective_function(self):
+        # update bad edges based on current coloring
         for color in self.bad_edges:
             color.clear()
         for v1 in self.graph.nodes[1:]:
@@ -52,6 +69,7 @@ class HybridLocalSearch:
                 if v1.number < v2.number and v1.color == v2.color:
                     self.bad_edges[v1.color].append((v1.number, v2.number))
 
+        # if a color isn't used => make k smaller and update the graph coloring
         i = 0
         while i < len(self.nodes_with_color)-1:
             if not self.nodes_with_color[i]:
@@ -64,6 +82,8 @@ class HybridLocalSearch:
 
         return -val
 
+    # creates a neighbor of current graph for SA search and GA
+    # by selecting a random node and giving it a random color that isn't currently used
     def random_neighbor(self):
         new = self.__deepcopy__()
         random_node = random.choice(new.graph.nodes[1:])
@@ -73,6 +93,7 @@ class HybridLocalSearch:
         new.fitness = new.objective_function()
         return new
 
+    # for selecting node for greedy coloring
     def MRVandHD(self):
         # calculates number of colors available for each node
         remaining_values = [0 for _ in range(self.graph.V+1)]
@@ -131,6 +152,7 @@ class HybridLocalSearch:
         self.nodes_with_color = self.nodes_with_color[:self.graph.colors_used_until_now]
         self.graph.k = self.graph.colors_used_until_now
 
+    # colors a graph randomly for GA
     def random_coloring(self):
         for node in self.graph.nodes[1:]:
             random_color = random.choice(list(range(self.graph.k)))
@@ -142,6 +164,7 @@ class HybridLocalSearch:
         self.nodes_with_color = self.nodes_with_color[:self.graph.colors_used_until_now]
         self.graph.k = self.graph.colors_used_until_now
 
+    # arranges colors for consistency when trying to crossover between graphs
     def arrange_nodes(self):
         for color, color_set in enumerate(self.nodes_with_color):
             minimum_node = np.inf
@@ -154,6 +177,7 @@ class HybridLocalSearch:
                         minimum_set = j
             self.swap_colors(minimum_set, color)
 
+    # auxiliary function
     def swap_colors(self, color1, color2):
         temp1 = [node_number for node_number in self.nodes_with_color[color1]]
         temp2 = [node_number for node_number in self.nodes_with_color[color2]]
@@ -162,6 +186,7 @@ class HybridLocalSearch:
         for v in temp2:
             self.color_node(self.graph.nodes[v], color1)
 
+    # updates to new k when smaller coloring is found
     def update_k(self):
         color = None
         for i, nodes_color in enumerate(self.nodes_with_color):

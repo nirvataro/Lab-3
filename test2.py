@@ -1,4 +1,4 @@
-import main
+import main_local_search
 import os
 import sys
 
