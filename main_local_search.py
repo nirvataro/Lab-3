@@ -16,11 +16,11 @@ printDictionary = {0: "Hybrid Approach", 1: "Objective Function Approach", 2: "F
 def CSP_coloring(graph, algorithm, search_time):
     print("Algorithm: ", printDictionary[algorithm])
     print("Search Time Limit: {} seconds".format(search_time))
+    print(graph)
+    print("Looking for initial solution")
     algorithm = algorithmDictionary[algorithm]
     local_search_graph = algorithm(graph, uncolored=True)
     sa_object = SA(local_search_graph)
-    print(graph)
-    print("Looking for initial solution")
     sa_object.sa_search(search_time=search_time, output=True)
 
     print("---------------TIMED OUT---------------\n")

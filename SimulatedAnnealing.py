@@ -31,7 +31,8 @@ class SimulatedAnnealing:
                 self.saBest.objective_function()
                 if output:
                     print("Improvement Found!")
-                    print("Best: ", str(self.saBest.fitness))
+                    print("Fitness: ", str(self.saBest.fitness))
+                    print("Current Best K is {}".format(self.saBest.graph.colors_used_until_now))
                     total_time = search_time-time_left
                     print("Elapsed Time: ", total_time)
                     print("Total clock ticks: ", total_time * cpu_freq()[0] * 2 ** 20)

@@ -1,20 +1,37 @@
 import random
-import SimulatedAnnealing as SA
 import numpy as np
 import copy
 
 
 class FeasibleLocalSearch:
     def __init__(self, graph, uncolored=False, random_coloring=False):
+        # legal graph with best k found
         self.graph = graph.__deepcopy__()
-        self.domains = [[0 for _ in range(self.graph.k)] for j in range(self.graph.V+1)]
+        self.highest_degree = max([len(node.neighbors) for node in self.graph.nodes[1:]])
+        # illegal graph with k-1 colors, trying to make it legal
+        self.try_graph = None
+        # node color domains
+        self.domains = [[0 for _ in range(self.graph.k)] for _ in range(self.graph.V+1)]
+        # sets of nodes with same color
         self.nodes_with_color = [set() for _ in range(self.graph.k)]
+        # for SA an GA initial coloring
         if uncolored:
             if not random_coloring:
                 self.greedy_coloring()
             else:
                 self.random_coloring()
-        self.fitness = self.objective_function()
+            # update k based on coloring we found
+            self.update_k()
+            # initializes try_graph
+            self.try_one_color_less()
+        # fitness refers to try_graph coloring
+        self.fitness = 0
+
+    def __deepcopy__(self):
+        new = FeasibleLocalSearch(self.graph.__deepcopy__())
+        new.domains = copy.deepcopy(self.domains)
+        new.fitness = new.objective_function()
+        return new
 
     # finds minimum remaining values variable with Highest Degree
     def MRVandHD(self):
@@ -22,7 +39,7 @@ class FeasibleLocalSearch:
         remaining_values = [0 for _ in range(self.graph.V+1)]
         for node in self.graph.uncolored_nodes:
             for color in range(self.graph.k):
-                if self.domains[node.number][color]:
+                if self.domains[node.number][color] == 0:
                     remaining_values[node.number] += 1
 
         # find the minimum number of values available
@@ -117,13 +134,16 @@ class FeasibleLocalSearch:
         for v in temp:
             self.color_node(self.graph.nodes[v], color1)
 
+    #
     def objective_function(self):
-        function_value = 0
-        for v1 in self.graph.nodes:
+        value = self.highest_degree + 2
+        value -= self.try_graph.k
+        value *= self.try_graph.V
+        for v1 in self.try_graph.nodes:
             for v2 in v1.neighbors:
-                if v1.color != v2.color:
-                    function_value += len(v1.neighbors)
-        return function_value
+                if v1.number < v2.number and v1.color == v2.color:
+                    value -= 1
+        return value
 
     def find_bad_nodes(self):
         bad_nodes = set()
@@ -143,7 +163,7 @@ class FeasibleLocalSearch:
         prob = prob / sum(prob)
 
         color_list = list(range(self.graph.k))
-        new_color = np.argmax(prob) # np.random.choice(color_list, p=prob)
+        new_color = np.random.choice(color_list, p=prob)
         new_graph = self.graph.__deepcopy__()
         new_graph_obj = FeasibleLocalSearch(new_graph)
         print(new_color)
@@ -153,24 +173,50 @@ class FeasibleLocalSearch:
 
         return new_graph_obj
 
+    # updates to new k when smaller coloring is found
+    def update_k(self):
+        color = None
+        for i, nodes_color in enumerate(self.nodes_with_color):
+            if not nodes_color:
+                color = i
+                break
+
+        if color is not None:
+            last_color = 0
+            for i, color_set in enumerate(self.nodes_with_color):
+                if color_set:
+                    last_color = i
+
+            last_color_set = self.nodes_with_color[last_color].copy()
+            for node_number in last_color_set:
+                self.color_node(self.graph.nodes[node_number], color)
+
+            self.graph.k = self.graph.colors_used_until_now
+            for i in range(len(self.domains)):
+                self.domains[i] = self.domains[i][:last_color]
+            self.nodes_with_color = self.nodes_with_color[:last_color]
+
     def try_one_color_less(self):
-        color = [0 for _ in range(self.graph.k)]
-        self.graph.k = self.graph.colors_used_until_now - 1
-        for node in self.graph.nodes[1:]:
-            color[node.color] += 1
-        bad_color = np.argmax(color)
-        for node in self.graph.nodes:
-            if node.color == self.graph.k:
-                self.color_node(node, bad_color)
-            elif node.color == bad_color:
-                new_color = random.choice(list(range(self.graph.k)))
-                self.color_node(node, new_color)
+        less_color_graph = self.graph.__deepcopy__()
+        less_color_graph.k = less_color_graph.colors_used_until_now - 1
+
+        # all nodes with color k will be assigned a new color
+        nodes_with_bad_color = self.nodes_with_color[-1]
+        for node_number in nodes_with_bad_color:
+            new_color = random.choice(list(range(less_color_graph.k)))
+            self.color_node(less_color_graph.nodes[node_number], new_color)
+
+        # we remove the last cell because color k was removed from color list
         for i in range(len(self.domains)):
-            self.domains[i] = self.domains[i][:self.graph.k]
+            self.domains[i] = self.domains[i][:-1]
+        self.nodes_with_color = self.nodes_with_color[:-1]
+
+        self.try_graph = less_color_graph
+        # calculate the fitness of try_graph
         self.fitness = self.objective_function()
 
     def legal(self):
-        for v1 in self.graph.nodes:
+        for v1 in self.try_graph.nodes:
             for v2 in v1.neighbors:
                 if v1.color == v2.color:
                     return False
@@ -180,9 +226,3 @@ class FeasibleLocalSearch:
         for node in self.graph.nodes[1:]:
             self.color_node(node, 0)
         self.fitness = self.objective_function()
-
-    def __deepcopy__(self):
-        new = FeasibleLocalSearch(self.graph.__deepcopy__())
-        new.domains = copy.deepcopy(self.domains)
-        new.fitness = new.objective_function()
-        return new

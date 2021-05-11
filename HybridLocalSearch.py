@@ -20,7 +20,7 @@ class HybridLocalSearch:
             if not random_coloring:
                 self.greedy_coloring()
             else:
-                # for genetic algorithm
+                # for GA
                 self.random_coloring()
             self.fitness = self.objective_function()
 
@@ -34,7 +34,7 @@ class HybridLocalSearch:
 
     # print method
     def __str__(self):
-        return "BEST K: " + str(self.graph.colors_used_until_now) + "\nFitness = " + str(self.fitness)
+        return "Best K: " + str(self.graph.colors_used_until_now) + "\nFitness = " + str(self.fitness)
 
     # remove color from "node"
     def uncolor_node(self, node):
@@ -99,7 +99,7 @@ class HybridLocalSearch:
         remaining_values = [0 for _ in range(self.graph.V+1)]
         for node in self.graph.uncolored_nodes:
             for color in range(self.graph.k):
-                if self.domains[node.number][color]:
+                if self.domains[node.number][color] == 0:
                     remaining_values[node.number] += 1
 
         # find the minimum number of values available
